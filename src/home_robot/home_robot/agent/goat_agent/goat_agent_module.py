@@ -76,7 +76,7 @@ class GoatAgentModule(nn.Module):
         all_confidences: List = None,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """Goal detection and localization via SuperGlue"""
-
+        # zht 在hm3d_eval.yaml中有一个score_thresh是24.5
         score_func = self.goal_policy_config.score_function
         assert score_func in ["confidence_sum", "match_count"]
 

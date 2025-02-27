@@ -26,6 +26,15 @@ from home_robot.perception.detection.coco_maskrcnn.coco_categories import (
 )
 from home_robot.utils.visualization import draw_line, get_contour_points
 
+def keep_img(img: np.array, path:str):
+    """
+    保存图片函数，wxl，2025.2.25
+    """
+    img = np.array(img,dtype=np.uint8)
+    img = Image.fromarray(img)
+    img.save(path)
+    return
+
 MAP_COLOR_PALETTE = [
     int(x * 255.0)
     for x in [
@@ -190,7 +199,7 @@ class NavVisualizer:
         explored_map: np.ndarray,
         semantic_frame: np.ndarray,
         timestep: int,
-        last_goal_image,
+        last_goal_image = None,
         last_td_map: Dict[str, Any] = None,
         last_collisions: Dict[str, Any] = None,
         semantic_map: Optional[np.ndarray] = None,
@@ -201,6 +210,8 @@ class NavVisualizer:
         frontier_map: Optional[np.ndarray] = None,
         dilated_obstacle_map: Optional[np.ndarray] = None,
         instance_map: Optional[np.ndarray] = None,
+        goal_info: Dict[str, Any] = None,
+        curr_action = None,
     ) -> None:
         """Visualize frame input and semantic map.
 
@@ -221,6 +232,24 @@ class NavVisualizer:
             visualize_goal: if True, visualize goal
             metrics: can populate for last frame
         """
+        # import pdb
+        # pdb.set_trace()
+        # print("想看imagegoal的map都长什么样")
+        # out_path = "/home/zht/git_repo/workspaces/home-robot/zht/image_goal"
+        # obstacle_map_img = (1-obstacle_map)*255
+        # cv2.imwrite(out_path + f"/obstacle_map_{timestep}.png", obstacle_map_img)
+        
+        # explored_map_img = (explored_map)*255
+        # cv2.imwrite(out_path + f"/explored_map_{timestep}.png", explored_map_img)
+        
+        # kernel_size = 10
+        # kernel = np.ones((kernel_size, kernel_size), np.uint8)
+        # if closest_goal_map is not None:
+        #     closest_goal_map_img = (1-cv2.dilate(closest_goal_map.astype(np.uint8), kernel, iterations = 1))*255
+        #     cv2.imwrite(out_path + f"/closest_goal_map_{timestep}.png", closest_goal_map_img)
+        # goal_map_img = (1-cv2.dilate(goal_map, kernel, iterations = 1))*255
+        # cv2.imwrite(out_path + f"/goal_map_{timestep}.png", goal_map_img)
+        # cv2.imwrite(out_path + f"/last_goal_image_{timestep}.png", last_goal_image[:, :, [2, 1, 0]])
         if not self.print_images:
             return
 
@@ -228,15 +257,33 @@ class NavVisualizer:
             last_collisions = {"is_collision": False}
 
         if dilated_obstacle_map is not None:
+            # dilated_obstacle_map_img = (1-dilated_obstacle_map)*255
+            # cv2.imwrite(out_path + f"/dilated_obstacle_map_{timestep}.png", dilated_obstacle_map_img)
             obstacle_map = dilated_obstacle_map
 
-        goal_frame = self.make_goal(last_goal_image)
+        if last_goal_image is not None:
+            goal_frame = self.make_goal(last_goal_image)
+            kp_frame = self.make_keypoint(timestep)
+        else: 
+            goal_frame = None
+            kp_frame = None
+        # cv2.imwrite(out_path + f"/goal_frame_{timestep}.png", goal_frame)
+        # cv2.imwrite(out_path + f"/semantic_frame_{timestep}.png", semantic_frame[:, :, [2,1,0]])
         obs_frame = self.make_observations(
             semantic_frame,
             last_collisions["is_collision"],
             found_goal,
             metrics,
         )
+        # cv2.imwrite(out_path + f"/obs_frame_{timestep}.png", obs_frame)
+        # semantic_map_rgb = np.zeros((semantic_map.shape[0], semantic_map.shape[1], 3), dtype=np.uint8)
+        # instance_int = np.unique(semantic_map)
+        # for value in instance_int:
+        #     np.random.seed(value)
+        #     color = tuple(np.random.randint(0, 256, 3, dtype=np.uint8))
+        #     semantic_map_rgb[semantic_map == value]=color
+        # cv2.imwrite(out_path + f"/semantic_map_rgb_{timestep}.png", semantic_map_rgb)
+                
         map_pred_frame = self.make_map_preds(
             sensor_pose,
             obstacle_map,
@@ -248,12 +295,31 @@ class NavVisualizer:
         )
         td_map_frame = None if last_td_map is None else self.make_td_map(last_td_map)
 
-        kp_frame = self.make_keypoint(timestep)
-
-        if td_map_frame is None:
+        # kp_frame = self.make_keypoint(timestep)
+        # cv2.imwrite(out_path + f"/map_pred_frame_{timestep}.png",map_pred_frame)
+        # if td_map_frame is not None:
+        #     cv2.imwrite(out_path + f"/top-down_map_{timestep}.png", td_map_frame)
+        # cv2.imwrite(out_path + f"/kp_frame_{timestep}.png", kp_frame)
+        
+        # 添加object/description map, wxl, 2025.2.21
+        if td_map_frame is None and goal_frame is not None:
             frame = np.concatenate(
                 [goal_frame, obs_frame, map_pred_frame, kp_frame], axis=1
             )
+        elif goal_frame is None:
+            # import ipdb; ipdb.set_trace()
+            if td_map_frame is None:
+                frame = np.concatenate(
+                    [obs_frame, map_pred_frame], axis=1
+                )
+            else:
+                upper_frame = obs_frame
+                lower_frame = np.concatenate([map_pred_frame, td_map_frame], axis=1)
+                upper_frame = self.pad_frame(
+                    upper_frame,
+                    lower_frame.shape[1],
+                )
+                frame = np.concatenate([upper_frame, lower_frame], axis=0)
         else:
             upper_frame = np.concatenate([goal_frame, obs_frame, kp_frame], axis=1)
             lower_frame = self.pad_frame(
@@ -263,9 +329,53 @@ class NavVisualizer:
             frame = np.concatenate([upper_frame, lower_frame], axis=0)
 
         nframes = 1 if metrics is None else 5
+        # import ipdb; ipdb.set_trace()
+        if curr_action!=None and goal_info!=None:
+            goal_info['Action'] = str(curr_action).split('.')[1]
+        if goal_info!=None:
+            frame = self._put_text_on_image(frame, str(goal_info))
         for i in range(nframes):
             name = f"snapshot_{timestep}_{i}.png"
             cv2.imwrite(os.path.join(self.vis_dir, name), frame)
+
+    # 在图片上添加文本，2025.2.24，wxl
+    def _put_text_on_image(
+        self,
+        vis_image,
+        text: str,
+        font_scale: int = 0.4,
+    ):
+        """
+        Place text at the center of the given bounding box.
+        """
+        h, w = vis_image.shape[:2]
+        # import ipdb; ipdb.set_trace()
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        font_scale = 0.6
+        text_color = (20, 20, 20)  # BGR
+        text_thickness = 1
+
+        textsize = cv2.getTextSize(text, font, font_scale, text_thickness)[0]
+        bbox_x_len = w  # 文本框宽度与图像宽度一致
+        bbox_y_len = int(textsize[1] * 1.5)  # 文本框高度为文本高度的1.5倍
+
+        # 计算文本框位置
+        bbox_x_start = (w - bbox_x_len) // 2  # 水平居中
+        bbox_y_start = h - bbox_y_len  # 位于图像底部
+        # The x coordinate at which the left edge of text needs to be placed
+        textX = (bbox_x_len - textsize[0]) // 2 + bbox_x_start
+        # The height at which base needs to be placed
+        textY = (bbox_y_len + textsize[1]) // 2 + bbox_y_start
+        return cv2.putText(
+            vis_image,
+            text,
+            (textX, textY),
+            font,
+            font_scale,
+            text_color,
+            text_thickness,
+            cv2.LINE_AA,
+        )
 
     def pad_frame(self, frame: np.ndarray, width: int) -> np.ndarray:
         """Pad the width of a frame to `width` centered white sides."""
@@ -443,6 +553,8 @@ class NavVisualizer:
         self.last_xy = (curr_x, curr_y)
 
         semantic_map += PI.SEM_START
+        
+        # keep_img(semantic_map*10,f"./semantic_debug_wxl/s1.png") # wxl
 
         # Obstacles, explored, and visited areas
         no_category_mask = semantic_map == PI.SEM_START + self.num_sem_categories - 1
@@ -453,6 +565,13 @@ class NavVisualizer:
         semantic_map[np.logical_and(no_category_mask, explored_mask)] = PI.EXPLORED
         semantic_map[np.logical_and(no_category_mask, obstacle_mask)] = PI.OBSTACLES
         semantic_map[visited_mask] = PI.VISITED
+        
+        # wxl
+        # keep_img(explored_mask*251, './semantic_debug_wxl/e1.png')
+        # keep_img(obstacle_mask*251, './semantic_debug_wxl/o1.png')
+        # keep_img(visited_mask*251, './semantic_debug_wxl/v1.png')
+        # keep_img(self.visited_map_vis*251, './semantic_debug_wxl/v2.png')
+        # keep_img(semantic_map*100,f"./semantic_debug_wxl/s2.png")
 
         # Goal
         if visualize_goal:
@@ -460,6 +579,7 @@ class NavVisualizer:
             goal_mat = 1 - skimage.morphology.binary_dilation(goal_map, selem) != 1
             goal_mask = goal_mat == 1
             semantic_map[goal_mask] = PI.REST_OF_GOAL
+            # keep_img(semantic_map*100,f"./semantic_debug_wxl/s25.png")
             if closest_goal_map is not None:
                 closest_goal_mat = (
                     1 - skimage.morphology.binary_dilation(closest_goal_map, selem) != 1
@@ -467,6 +587,8 @@ class NavVisualizer:
                 closest_goal_mask = closest_goal_mat == 1
                 semantic_map[closest_goal_mask] = PI.CLOSEST_GOAL
 
+        # keep_img(semantic_map*100,f"./semantic_debug_wxl/s3.png")
+        
         # Semantic categories
         semantic_map_vis = Image.new(
             "P", (semantic_map.shape[1], semantic_map.shape[0])
@@ -479,6 +601,8 @@ class NavVisualizer:
         semantic_map_vis = cv2.resize(
             semantic_map_vis, (480, 480), interpolation=cv2.INTER_NEAREST
         )
+        
+        # keep_img(semantic_map_vis,f"./semantic_debug_wxl/s4.png") # wxl
 
         border_size = 10
         text_bar_height = 50 - border_size
@@ -486,6 +610,8 @@ class NavVisualizer:
         new_h = self.ind_frame_height - text_bar_height - 2 * border_size
         new_w = int(new_h / semantic_map_vis.shape[0] * semantic_map_vis.shape[1])
         semantic_map_vis = cv2.resize(semantic_map_vis, (new_w, new_h))
+        
+        # keep_img(semantic_map_vis,f"./semantic_debug_wxl/s5.png") # wxl
 
         # Agent arrow
         pos = (
@@ -499,6 +625,8 @@ class NavVisualizer:
         agent_arrow = get_contour_points(pos, origin=(0, 0))
         color = MAP_COLOR_PALETTE[9:12][::-1]
         cv2.drawContours(semantic_map_vis, [agent_arrow], 0, color, -1)
+        
+        # keep_img(semantic_map_vis,f"./semantic_debug_wxl/s6.png") # wxl
 
         # semantic_map_vis = cv2.cvtColor(semantic_map_vis, cv2.COLOR_RGB2BGR)
 
@@ -512,6 +640,8 @@ class NavVisualizer:
 
         semantic_map_vis = self._add_border(semantic_map_vis, border_size)
         w = semantic_map_vis.shape[1]
+        
+        # keep_img(semantic_map_vis,f"./semantic_debug_wxl/s7.png") # wxl
 
         top_bar = np.ones((text_bar_height, w, 3), dtype=np.uint8) * 255
         frame = np.concatenate([top_bar, semantic_map_vis.astype(np.uint8)], axis=0)
@@ -535,6 +665,10 @@ class NavVisualizer:
             thickness,
             cv2.LINE_AA,
         )
+        
+        # keep_img(frame, f"./semantic_debug_wxl/s8.png") # wxl
+        # print("看一下语义地图处理中是怎么变化的，保存在semantic_debug_wxl文件夹下")
+        # import ipdb; ipdb.set_trace()
         return frame
 
     def make_td_map(self, top_down_map: np.ndarray) -> np.ndarray:

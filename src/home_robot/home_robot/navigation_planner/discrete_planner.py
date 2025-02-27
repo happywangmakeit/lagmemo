@@ -524,6 +524,7 @@ class DiscretePlanner:
                 traversible, goal_map, start, dilated_goal_map=dilated_goal_map
             )
         else:
+            # 20250211 planner snap shot是在这里输出的
             navigable_goal_map = planner._find_within_distance_to_multi_goal(
                 goal_map,
                 self.min_goal_distance_cm / self.map_resolution,

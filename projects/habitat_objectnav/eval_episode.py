@@ -65,8 +65,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print(json.dumps(vars(args), indent=4))
     print("-" * 100)
-
     config = get_config(args.habitat_config_path, args.baseline_config_path)
+    import ipdb; ipdb.set_trace()
 
     config.NUM_ENVIRONMENTS = 1
     config.PRINT_IMAGES = 1

@@ -215,6 +215,10 @@ class Categorical2DSemanticMapModule(nn.Module):
             seq_origins: sequence of local map origins of shape
              (batch_size, sequence_length, 3)
         """
+        # import pdb
+        # pdb.set_trace()
+        # print("想看seq_obs的维度，是否已经含有instance_channel")
+        # print(seq_obs.shape)
         batch_size, sequence_length = seq_obs.shape[:2]
         device, dtype = seq_obs.device, seq_obs.dtype
 
@@ -256,7 +260,9 @@ class Categorical2DSemanticMapModule(nn.Module):
                         origins,
                         self.map_size_parameters,
                     )
-
+            # import pdb
+            # pdb.set_trace()
+            # print("想看在遍历sequence_length时，seq_obs有没有instance channel")
             local_map, local_pose = self._update_local_map_and_pose(
                 seq_obs[:, t],
                 seq_pose_delta[:, t],
@@ -265,6 +271,9 @@ class Categorical2DSemanticMapModule(nn.Module):
                 seq_camera_poses,
                 blacklist_target,
             )
+            # import pdb
+            # pdb.set_trace()
+            # print("冲着更新instance view的函数去，第一跳")
             for e in range(batch_size):
                 if seq_update_global[e, t]:
                     self._update_global_map_and_pose_for_env(
@@ -399,6 +408,9 @@ class Categorical2DSemanticMapModule(nn.Module):
              and location of shape (batch_size, MC.NON_SEM_CHANNELS + num_sem_categories, M, M)
             current_pose: current pose updated with pose delta of shape (batch_size, 3)
         """
+        # import pdb
+        # pdb.set_trace()
+        # print("想看的地方2，为了弄清instance channels，这里有obs，部分通道成了semantic channels部分通道成了instance channels")
         batch_size, obs_channels, h, w = obs.size()
         device, dtype = obs.device, obs.dtype
         if camera_pose is not None:
@@ -480,6 +492,9 @@ class Categorical2DSemanticMapModule(nn.Module):
 
         voxel_channels = 1 + self.num_sem_categories
         num_instance_channels = 0
+        # import pdb
+        # pdb.set_trace()
+        # print("想看instance_channel如何变化，与semantic channel的关系")
         if self.record_instance_ids:
             num_instance_channels = obs_channels - 4 - self.num_sem_categories
             if self.evaluate_instance_tracking:
@@ -784,6 +799,9 @@ class Categorical2DSemanticMapModule(nn.Module):
             Tensor: The updated global instances tensor.
 
         """
+        # import pdb
+        # pdb.set_trace()
+        # print("冲着更新instance view的函数去，第四跳")
         p = self.padding_for_instance_overlap  # default: 1
         d = self.dilation_for_instances  # default: 0
 
@@ -832,7 +850,9 @@ class Categorical2DSemanticMapModule(nn.Module):
 
         # Get the instances from the global map within the local map's region
         global_instances_within_local = global_instances[x_start:x_end, y_start:y_end]
-
+        # import pdb
+        # pdb.set_trace()
+        # print("冲着更新instance view的函数去，还是第四跳")
         instance_mapping = self._get_local_to_global_instance_mapping(
             env_id,
             extended_dilated_local_map,
@@ -871,8 +891,11 @@ class Categorical2DSemanticMapModule(nn.Module):
         Returns:
             A mapping of local instance IDs to global instance IDs.
         """
+        # import pdb
+        # pdb.set_trace()
+        # print("冲着更新instance view的函数去，第五跳")
         instance_mapping = {}
-
+        # print("unique的local_instance:", torch.unique(extended_local_labels))
         # Associate instances in the local map with corresponding instances in the global map
         for local_instance_id in torch.unique(extended_local_labels):
             if local_instance_id == 0:
@@ -884,20 +907,25 @@ class Categorical2DSemanticMapModule(nn.Module):
             # Check for overlapping instances in the global map
             overlapping_instances = global_instances_within_local[local_instance_pixels]
             unique_overlapping_instances = torch.unique(overlapping_instances)
-
+            # print("这一帧instance的占地面积：", overlapping_instances.shape[0])
             unique_overlapping_instances = unique_overlapping_instances[
                 unique_overlapping_instances != 0
             ]
             if len(unique_overlapping_instances) >= 1:
                 # If there is a corresponding instance in the global map, pick the first one and associate it
+                # print("这一帧instance是见过的")
                 global_instance_id = int(unique_overlapping_instances[0].item())
                 instance_mapping[local_instance_id.item()] = global_instance_id
             else:
+                # print("这一帧又要新开一个instance了")
                 # If there are no corresponding instances, create a new instance
                 global_instance_id = max_instance_id + 1
                 instance_mapping[local_instance_id.item()] = global_instance_id
                 max_instance_id += 1
             # update the id in instance memory
+            # import pdb
+            # pdb.set_trace()
+            # print("冲着更新instance view的函数去，还是第五跳")
             self.instance_memory.update_instance_id(
                 env_id, int(local_instance_id.item()), global_instance_id
             )
@@ -921,6 +949,9 @@ class Categorical2DSemanticMapModule(nn.Module):
             Tensor: The updated global map tensor.
         """
         # TODO Can we vectorize this across categories? (Only needed if speed bottleneck)
+        # import pdb
+        # pdb.set_trace()
+        # print("冲着更新instance view的函数去，第三跳")
         for i in range(self.num_sem_categories):
             if (
                 torch.sum(
@@ -968,7 +999,9 @@ class Categorical2DSemanticMapModule(nn.Module):
         """Update global map and pose and re-center local map and pose for a
         particular environment.
         """
-
+        # import pdb
+        # pdb.set_trace()
+        # print("冲着更新instance view的函数去，第二跳")
         if self.record_instance_ids:
             global_map = self._update_global_map_instances(
                 e, global_map, local_map, lmb

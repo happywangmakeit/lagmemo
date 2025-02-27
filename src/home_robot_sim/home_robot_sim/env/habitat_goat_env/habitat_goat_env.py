@@ -44,7 +44,7 @@ class HabitatGoatEnv(HabitatEnv):
         # TODO: get open set vocabulary
         vocabulary = []
         for goal in goals:
-            vocabulary.append(goal["target"])
+            vocabulary.append(goal["category"])
             if "landmarks" in goal.keys():
                 vocabulary += goal["landmarks"]
         return set(vocabulary)
@@ -91,7 +91,7 @@ class HabitatGoatEnv(HabitatEnv):
     ) -> home_robot.core.interfaces.Observations:
         depth = self._preprocess_depth(habitat_obs["depth"])
         goals, vocabulary = self._preprocess_goals(
-            self.current_episode.tasks, habitat_obs
+            self.current_episode.tasks, habitat_obs, self.current_episode.goals
         )
         obs = home_robot.core.interfaces.Observations(
             rgb=habitat_obs["rgb"],
@@ -105,6 +105,7 @@ class HabitatGoatEnv(HabitatEnv):
             camera_pose=None,
             third_person_image=None,
         )
+        # import ipdb; ipdb.set_trace()
         obs = self._preprocess_semantic(obs, habitat_obs["semantic"], vocabulary)
         return obs
 
@@ -153,10 +154,52 @@ class HabitatGoatEnv(HabitatEnv):
         rescaled_depth[depth == 1.0] = MAX_DEPTH_REPLACEMENT_VALUE
         return rescaled_depth[:, :, -1]
 
-    def _preprocess_goals(self, tasks, habitat_obs):
+    def _preprocess_goals(self, tasks, habitat_obs, total_goals:dict =None):
         goals = []
         vocabulary = []
         for idx, task in enumerate(tasks):
+            goal = {
+                "type": task[1],
+            }
+
+            if task[1] == "object":
+                goal["target"] = task[0]
+            elif task[1] == "description":
+                target = task[0]
+                # landmarks = task["llm_response"]["landmark"]
+                # if target in landmarks:
+                #     landmarks.remove(target)
+
+                # if "wall" in landmarks:
+                #     landmarks.remove("wall")  # unhelpful landmark
+
+                target = "_".join(target.split())
+                # landmarks = ["_".join(landmark.split()) for landmark in landmarks]
+
+                goal["target"] = target
+                goal["landmarks"] = None # landmarks
+                
+                # changed by wxl, 2025.2.18
+                # if "instructions" in task:
+                    # goal["instruction"] = task["instructions"][0]
+                for cur_goal in total_goals[idx]:
+                    if 'lang_desc' in cur_goal.keys() and cur_goal["object_id"]==task[2]:
+                        goal["instruction"] = cur_goal['lang_desc']
+            elif task[1] == "image":
+                goal["target"] = task[0]
+                goal["image"] = habitat_obs["multigoal"][idx]["image"]
+
+            if goal["target"] not in vocabulary:
+                vocabulary.append(goal["target"])
+            # if "landmarks" in goal.keys():
+            #     if goal["landmarks"] not in vocabulary:
+            #         vocabulary += goal["landmarks"]
+
+            goal["semantic_id"] = vocabulary.index(goal["target"]) + 1
+            goals.append(goal)
+            
+            continue
+        
             goal = {
                 "type": task["task_type"],
             }
@@ -204,6 +247,17 @@ class HabitatGoatEnv(HabitatEnv):
         return HabitatSimActions[discrete_action.name.lower()]
 
     def _process_info(self, info: Dict[str, Any]) -> Any:
+        # changed by wxl, 2025.2.7
+        if info:
+            # self.visualizer.visualize(**info)
+            if (
+                self.habitat_env.current_episode.tasks[
+                    self.habitat_env.task.current_task_idx
+                ][1]
+                != "image"
+            ):
+                self.visualizer.visualize(**info)
+        return
         if info:
             if (
                 self.habitat_env.current_episode.tasks[

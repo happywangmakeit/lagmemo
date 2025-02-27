@@ -149,12 +149,12 @@ class FMMPlanner:
             if self.visualize:
                 cv2.imshow("Planner Distance", dist_vis)
                 cv2.waitKey(1)
-
-            if self.print_images and timestep is not None:
-                cv2.imwrite(
-                    os.path.join(self.vis_dir, f"planner_snapshot_{timestep}.png"),
-                    (dist_vis * 255).astype(int),
-                )
+            # zht 20250211 planner的snap shot 没啥用，注释了
+            # if self.print_images and timestep is not None:
+            #     cv2.imwrite(
+            #         os.path.join(self.vis_dir, f"planner_snapshot_{timestep}.png"),
+            #         (dist_vis * 255).astype(int),
+            #     )
         return dd
 
     def get_short_term_goal(self, state: List[float], continuous=True):

@@ -106,12 +106,13 @@ class LanguageNavFrontierExplorationPolicy(nn.Module):
         reject_visited_targets=False,
     ):
         """If the desired goal is in the semantic map, reach it."""
+        # language的第一帧会进这个分支 object永远进这个分支
         batch_size, _, height, width = map_features.shape
         device = map_features.device
 
         goal_map = torch.zeros((batch_size, height, width), device=device)
         found_goal_current = torch.zeros(batch_size, dtype=torch.bool, device=device)
-
+        
         for e in range(batch_size):
             # if the category goal was not found previously
             if not found_goal_current[e]:
@@ -119,16 +120,26 @@ class LanguageNavFrontierExplorationPolicy(nn.Module):
                 category_map = map_features[
                     e, goal_category[e] + 2 * MC.NON_SEM_CHANNELS, :, :
                 ]
-
+                print("20250226,zht 看一下goal_category，是不是就是semantic_id")
+                print("goal_category:",goal_category[0])
                 if reject_visited_targets:
                     # remove the target objects that the agent has already been close to
                     category_map = category_map * (
                         1 - map_features[e, MC.BLACKLISTED_TARGETS_MAP, :, :]
                     )
+                    import pdb
+                    pdb.set_trace()
+                    print("20250226 zht：这也永远是个废分支，从没有地方改reject_visited_targets=False")
                 # if the desired category is found with required constraints, set goal for navigation
                 if (category_map == 1).sum() > 0:
                     goal_map[e] = category_map == 1
                     found_goal_current[e] = True
+                    print("20250226,一旦一开始found_goal这一subtask永远有这句")
+
+            else:
+                import pdb
+                pdb.set_trace()
+                print("20250226 zht：这永远是个废分支，不可能停在这里")
         return goal_map, found_goal_current
 
     def get_frontier_map(self, map_features):

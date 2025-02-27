@@ -165,6 +165,66 @@ class Visualizer:
             # update semantic map with instance ids
             semantic_map[border_pixels > 0] = PI.INSTANCE_BORDER
 
+# 添加绘制目标地图模块，wxl, 2025.2.21
+    def make_td_map(self, top_down_map: np.ndarray) -> np.ndarray:
+        """
+        In Habitat Simulation, an oracle top-down map may be provided.
+        Visualize that sub-frame.
+        """
+        from habitat.utils.visualizations import maps
+        border_size = 10
+        text_bar_height = 50 - border_size
+        new_h = 450 - text_bar_height - 2 * border_size
+
+        td_map = maps.colorize_draw_agent_and_fit_to_height(top_down_map, new_h)
+        td_map = cv2.cvtColor(td_map, cv2.COLOR_RGB2BGR)
+
+        # add map outline
+        color = [100, 100, 100]
+        h, w = td_map.shape[:2]
+        td_map[0, 0:] = color
+        td_map[h - 1, 0:] = color
+        td_map[0:, 0] = color
+        td_map[0:, w - 1] = color
+
+        td_map = self._add_border(td_map, border_size)
+        w = td_map.shape[1]
+
+        top_bar = np.ones((text_bar_height, w, 3), dtype=np.uint8) * 255
+        frame = np.concatenate([top_bar, td_map.astype(np.uint8)], axis=0)
+
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        fontScale = 0.8
+        color = (20, 20, 20)
+        thickness = 2
+
+        text = "Oracle Top-Down Map"
+        textsize = cv2.getTextSize(text, font, fontScale, thickness)[0]
+        textX = (w - textsize[0]) // 2
+        textY = (text_bar_height + border_size + textsize[1]) // 2
+        frame = cv2.putText(
+            frame,
+            text,
+            (textX, textY),
+            font,
+            fontScale,
+            color,
+            thickness,
+            cv2.LINE_AA,
+        )
+        return frame
+    
+    def _add_border(self, frame: np.ndarray, border_size: int) -> np.ndarray:
+        """Add a white border to a frame."""
+        h, w = frame.shape[:2]
+        side = np.ones((h, border_size, 3), dtype=np.uint8) * 255
+        frame = np.concatenate([side, frame, side], axis=1)
+        top = np.ones((border_size, w + 2 * border_size, 3), dtype=np.uint8) * 255
+        frame = np.concatenate([top, frame, top], axis=0)
+        return frame
+    #######
+
+
     def visualize(
         self,
         timestep: int,
@@ -239,6 +299,9 @@ class Visualizer:
             V.IMAGE_WIDTH,
             V.TOP_PADDING,
         )
+        
+        # 修改可视化内容， wxl
+        # import ipdb;ipdb.set_trace()
 
         # if curr_skill is not None, place the skill name below the third person image
         text = None
@@ -260,6 +323,7 @@ class Visualizer:
             obstacle_map = dilated_obstacle_map
 
         self.instance_dilation_selem = skimage.morphology.disk(1)
+        # import ipdb; ipdb.set_trace()
 
         if obstacle_map is not None:
             curr_x, curr_y, curr_o, gy1, gy2, gx1, gx2 = sensor_pose
@@ -298,6 +362,7 @@ class Visualizer:
             semantic_map[visited_mask] = PI.VISITED
 
             # Goal
+            # import ipdb; ipdb.set_trace()
             if visualize_goal:
                 selem = skimage.morphology.disk(4)
                 goal_mat = 1 - skimage.morphology.binary_dilation(goal_map, selem) != 1

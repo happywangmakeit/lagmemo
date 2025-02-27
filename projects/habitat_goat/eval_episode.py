@@ -31,6 +31,7 @@ if __name__ == "__main__":
         "--habitat_config_path",
         type=str,
         default="goat/modular_goat_hm3d.yaml",
+        # default="objectnav/modular_objectnav_hm3d.yaml",
         help="Path to config yaml",
     )
     parser.add_argument(
@@ -51,7 +52,11 @@ if __name__ == "__main__":
     print("-" * 100)
 
     config = get_config(args.habitat_config_path, args.baseline_config_path)
-
+    # config['habitat']['dataset']['split'] = 'train'
+    # config['habitat']['dataset']['data_path'] = 'data/datasets/goat/hm3d/v0.2/train/train.json.gz'
+    config['habitat']['dataset']['data_path'] = 'data/datasets/goat/hm3d/val_seen/val_seen.json.gz'
+    print("可以在pdb里调整config，不需要的话直接continue即可")
+    import ipdb;ipdb.set_trace()
     config.NUM_ENVIRONMENTS = 1
     config.PRINT_IMAGES = 1
 
@@ -63,14 +68,17 @@ if __name__ == "__main__":
     os.makedirs(results_dir, exist_ok=True)
 
     metrics = {}
+    # success_data = {}
 
     for i in range(len(env.habitat_env.episodes)):
         env.reset()
         agent.reset()
-
+        # t记录是在一整个episode中的当前序数
         t = 0
 
         scene_id = env.habitat_env.current_episode.scene_id.split("/")[-1].split(".")[0]
+        # if scene_id not in success_data.keys():
+        #     success_data[scene_id] = {'description':(0,0),'image':(0,0),'object':(0,0)}
         episode = env.habitat_env.current_episode
         episode_id = episode.episode_id
         agent.planner.set_vis_dir(scene_id, f"{episode_id}_{agent.current_task_idx}")
@@ -84,8 +92,9 @@ if __name__ == "__main__":
 
         all_subtask_metrics = []
         pbar = tqdm(total=config.AGENT.max_steps)
+        subtask_num = 0
         while not env.episode_over:
-            t += 1
+            t  += 1
             obs = env.get_observation()
             if t == 1:
                 obs_tasks = []
@@ -98,8 +107,21 @@ if __name__ == "__main__":
                     obs_tasks.append(obs_task)
 
                 pprint(obs_tasks)
-
+            # print("想知道前面在print什么东西，obs是不是已经什么都有了")
+            # zht 20250210 输出 instance map
+            # from PIL import Image
+            # instance_map = obs.task_observations["instance_map"]
+            # rgb_image = np.zeros((instance_map.shape[0], instance_map.shape[1], 3), dtype=np.uint8)
+            # instance_int = np.unique(instance_map)
+            # for value in instance_int:
+            #     np.random.seed(value)
+            #     color = tuple(np.random.randint(0, 256, 3, dtype=np.uint8))
+            #     rgb_image[instance_map==value]=color
+            # Image.fromarray(rgb_image).save(f"/home/zht/git_repo/workspaces/home-robot/zht/instance_map{t-1}.png")
+            # planner_snap_shot自非初始化后，在act中输出  image goal的可视化也在act里输出
+            # import ipdb; ipdb.set_trace()
             action, info = agent.act(obs)
+            # snap_shot - 非image goal的输出在apply_action的visualize里输出
             env.apply_action(action, info=info)
             pbar.set_description(
                 f"Action: {str(action).split('.')[-1]} (sub-task: {agent.current_task_idx})"
@@ -107,6 +129,8 @@ if __name__ == "__main__":
             pbar.update(1)
 
             if action == DiscreteNavigationAction.STOP:
+                print(f"这里subtask{subtask_num}结束了")
+                subtask_num += 1
                 ep_metrics = env.get_episode_metrics()
                 ep_metrics.pop("goat_top_down_map", None)
                 print(ep_metrics)
@@ -126,6 +150,8 @@ if __name__ == "__main__":
                         scene_id, f"{episode_id}_{agent.current_task_idx}"
                     )
                     pbar.reset()
+
+        print(f"这里episode{i+1}开始了")
 
         pbar.close()
 

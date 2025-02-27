@@ -18,7 +18,7 @@ def get_matches_against_memory(
     instance_view_counts = []
     steps_per_view = []
     for (inst_key, inst) in tqdm(
-        instances.items(), desc="Matching goal image with instance views"
+        instances.items(), desc="Matching goal with instance views"
     ):
         inst_views = inst.instance_views
         for view_idx, inst_view in enumerate(inst_views):

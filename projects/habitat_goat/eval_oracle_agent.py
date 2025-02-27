@@ -40,7 +40,14 @@ def draw_top_down_map(info, output_size):
 def get_reachable_viewpoint(sim, agent_pos, current_goals, follower):
     current_goal_reachable_viewpoint = None
     for goal in current_goals:
-        goal_vp = goal.view_points[0].agent_state.position
+        
+        # changed by wxl, 2025.2.6
+        try:
+            goal_vp = goal['view_points'][0]['agent_state']['position']
+        except:
+            goal_vp = goal[0]['view_points'][0]['agent_state']['position']
+            # import ipdb; ipdb.set_trace()
+        # goal_vp = goal.view_points[0].agent_state.position
         gd = sim.geodesic_distance(goal_vp, agent_pos)
         if gd != math.inf:
             if follower.get_next_action(goal_vp) != 0:
@@ -75,7 +82,9 @@ if __name__ == "__main__":
     print("-" * 100)
 
     config = get_config(args.habitat_config_path, args.baseline_config_path)
-    config.PRINT_IMAGES = 0
+    config.PRINT_IMAGES = 1
+    config['habitat']['dataset']['data_path'] = 'data/datasets/goat/hm3d/v0.2/train/train.json.gz'
+    # import ipdb; ipdb.set_trace()
 
     habitat_env = Env(config)
     env = HabitatGoatEnv(habitat_env, config=config)
@@ -102,6 +111,17 @@ if __name__ == "__main__":
         scene_id = env.habitat_env.current_episode.scene_id.split("/")[-1].split(".")[0]
         episode = env.habitat_env.current_episode
         episode_id = episode.episode_id
+
+# changed by wxl, 2025.2.6
+        agent.planner.set_vis_dir(scene_id, f"{episode_id}_{agent.current_task_idx}")
+        agent.imagenav_visualizer.set_vis_dir(
+            f"{scene_id}_{episode_id}_{agent.current_task_idx}"
+        )
+        agent.imagenav_obs_preprocessor.matching.set_vis_dir(
+            f"{scene_id}_{episode_id}_{agent.current_task_idx}"
+        )
+        env.visualizer.set_vis_dir(scene_id, f"{episode_id}_{agent.current_task_idx}")
+
 
         pbar = tqdm(total=config.AGENT.max_steps)
 
@@ -141,10 +161,12 @@ if __name__ == "__main__":
                     obs_tasks.append(obs_task)
 
             best_action = follower.get_next_action(current_goal_reachable_viewpoint)
+            # action, info = agent.act(obs)
+            env.apply_action(best_action)
             if best_action is None:
                 break
 
-            env.apply_action(best_action)
+            # env.apply_action(best_action)
 
             if config.PRINT_IMAGES:
                 im = obs.rgb
@@ -171,6 +193,21 @@ if __name__ == "__main__":
                     images = []
 
                 if not env.episode_over:
+                    # changed by wxl, 2025.2.6
+                    agent.imagenav_visualizer.set_vis_dir(
+                        f"{scene_id}_{episode_id}_{agent.current_task_idx}"
+                    )
+                    agent.imagenav_obs_preprocessor.matching.set_vis_dir(
+                        f"{scene_id}_{episode_id}_{agent.current_task_idx}"
+                    )
+                    agent.planner.set_vis_dir(
+                        scene_id, f"{episode_id}_{agent.current_task_idx}"
+                    )
+                    env.visualizer.set_vis_dir(
+                        scene_id, f"{episode_id}_{agent.current_task_idx}"
+                    )
+                    
+                    
                     current_task_idx = env.habitat_env.task.current_task_idx
                     current_goal = env.habitat_env.current_episode.goals[
                         env.habitat_env.task.current_task_idx

@@ -252,6 +252,13 @@ class Matching(nn.Module):
         if isinstance(rgb_image, np.ndarray) and len(rgb_image.shape) == 3:
             rgb_image_batched = [rgb_image]
         else:
+            # 说明此时是有instance memory list
+            # import pdb
+            # pdb.set_trace()
+            # print("想看这里对比的rgb长啥样")
+            # out_path = "/home/zht/git_repo/workspaces/home-robot/zht/image_matching"
+            # for num_, instance_image in enumerate(rgb_image):
+            #     cv2.imwrite(out_path + f"/instance_image{num_}.png", instance_image[:,:,[2,1,0]])
             rgb_image_batched = rgb_image
             assert rgb_image_keypoints is None
 

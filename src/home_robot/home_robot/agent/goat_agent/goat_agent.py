@@ -277,7 +277,8 @@ class GoatAgent(Agent):
             goal_map = self.goal_map.squeeze(1).cpu().numpy()
 
         # found_goal = self.found_goal.squeeze(1).cpu()
-
+        # 为了防止bug index out of range 增大config中max_num_sub_task_episodes
+        # sub_task_timesteps现在是一个list [0]为一个长度为max_num_sub_task_episodes的list
         for e in range(self.num_environments):
             if frontier_map is not None:
                 self.semantic_map.update_frontier_map(
@@ -348,7 +349,9 @@ class GoatAgent(Agent):
         self.semantic_map.init_map_and_pose()
         self.episode_panorama_start_steps = self.panorama_start_steps
         self.reached_goal_panorama_rotate_steps = self.panorama_rotate_steps
-        self.instance_memory.reset()
+        # zht 20250218 把record instance改为None，以防报错
+        if self.instance_memory is not None:
+            self.instance_memory.reset()
         self.landmark_found = False
         self.seen_landmarks = []
         self.reject_visited_targets = False
@@ -398,6 +401,15 @@ class GoatAgent(Agent):
         """Act end-to-end."""
         current_task = obs.task_observations["tasks"][self.current_task_idx]
         task_type = current_task["type"]
+        # 还是着重输出一下当前的task_type
+        if task_type == "description":
+            # print("在languagenav这停一下，看一下language对否")
+            # import ipdb; ipdb.set_trace()
+            print(f"反正python可以输出中文， 当前的task_type是：{task_type}, language:{1}")
+        else:
+            print("反正python可以输出中文， 当前的task_type是：", task_type)
+        # 看了一下都有target字段和semantic_id字段，输出
+        print("对应的target字段是：", current_task["target"], "对应的semantic_id字段是：", current_task["semantic_id"])
         # 1 - Obs preprocessing
         if task_type == "imagenav":
             self.imagenav_obs_preprocessor.current_task_idx = self.current_task_idx
@@ -438,7 +450,7 @@ class GoatAgent(Agent):
                 all_matches,
                 all_confidences,
             ) = self._preprocess_obs(obs, task_type)
-
+            
             # 2 - Semantic mapping + policy
             planner_inputs, vis_inputs = self.prepare_planner_inputs(
                 obs_preprocessed,
@@ -452,6 +464,63 @@ class GoatAgent(Agent):
                 all_matches=all_matches,
                 all_confidences=all_confidences,
             )
+        # changed by wxl, 2025.2.7
+        elif task_type == "image":
+            self.imagenav_obs_preprocessor.current_task_idx = self.current_task_idx
+            (
+                obs_preprocessed,
+                img_goal,
+                pose_delta,
+                camera_pose,
+                matches,
+                confidence,
+                all_matches,
+                all_confidences,
+            ) = self.imagenav_obs_preprocessor.preprocess(
+                obs, last_pose=self.last_poses[0], instance_memory=self.instance_memory
+            )
+            object_goal_category = current_task["semantic_id"]
+            object_goal_category = torch.tensor(object_goal_category).unsqueeze(0)
+            planner_inputs, vis_inputs = self.prepare_planner_inputs(
+                obs_preprocessed,
+                pose_delta,
+                object_goal_category=object_goal_category,
+                matches=matches,
+                confidence=confidence,
+                camera_pose=camera_pose,
+                all_matches=all_matches,
+                all_confidences=all_confidences,
+            )
+            self.last_poses[0] = self.imagenav_obs_preprocessor.last_pose
+            # import ipdb; ipdb.set_trace()
+        elif task_type in ["object", "description"]:
+            (
+                obs_preprocessed,
+                pose_delta,
+                object_goal_category,
+                landmarks,
+                camera_pose,
+                matches,
+                confidence,
+                all_matches,
+                all_confidences,
+            ) = self._preprocess_obs(obs, task_type)
+
+            # 2 - Semantic mapping + policy
+            # import ipdb; ipdb.set_trace()
+            planner_inputs, vis_inputs = self.prepare_planner_inputs(
+                obs_preprocessed,
+                pose_delta,
+                object_goal_category=object_goal_category,
+                camera_pose=camera_pose,
+                reject_visited_targets=self.reject_visited_targets,
+                blacklist_target=self.blacklist_target,
+                matches=matches,
+                confidence=confidence,
+                all_matches=all_matches,
+                all_confidences=all_confidences,
+            )
+            # import ipdb; ipdb.set_trace()
 
         # 3 - Planning
         closest_goal_map = None
@@ -482,7 +551,8 @@ class GoatAgent(Agent):
 
         if self.visualize:
             vis_inputs[0]["dilated_obstacle_map"] = dilated_obstacle_map
-            if task_type == "imagenav":
+            # zht 2025.2.9 把imagenav改成image了
+            if task_type == "image":
                 collision = {"is_collision": False}
                 info = {
                     **planner_inputs[0],
@@ -495,8 +565,23 @@ class GoatAgent(Agent):
                     "last_collisions": collision,
                     "last_td_map": obs.task_observations.get("top_down_map"),
                 }
+                # import ipdb; ipdb.set_trace()
                 self.imagenav_visualizer.visualize(**info)
             else:
+                collision = {"is_collision": False}
+                info = {
+                    **planner_inputs[0], 
+                    **vis_inputs[0],
+                    "semantic_frame": obs.rgb,
+                    "closest_goal_map": closest_goal_map,
+                    # "last_goal_image": obs.task_observations["tasks"][
+                    #     self.current_task_idx
+                    # ]["image"],
+                    "last_collisions": collision,
+                    "last_td_map": obs.task_observations.get("top_down_map"),
+                }
+                # import ipdb; ipdb.set_trace()
+                self.imagenav_visualizer.visualize(**info)
                 goal_text_desc = {
                     x: y
                     for x, y in obs.task_observations["tasks"][
@@ -587,7 +672,8 @@ class GoatAgent(Agent):
             camera_pose = torch.tensor(np.asarray(camera_pose)).unsqueeze(0)
 
         matches, confidences, all_matches, all_confidences = None, None, [], []
-        if task_type == "languagenav":
+        # zht 20250210 这个地方预处理也要改成对应的task_type  原本是languagenav
+        if task_type == "description":
 
             def clip_matching_fn(views, language_goal, **kwargs):
                 batch_size = 64
@@ -615,15 +701,20 @@ class GoatAgent(Agent):
                 return [[1]] * similarity.shape[0], np.expand_dims(
                     similarity.detach().cpu().numpy(), 1
                 )
-
-            if self.prev_task_type != "languagenav":
+            # zht 20250210 这个地方也改  原本是languagenav， current_task没有instruction字段
+            # zht 20250218 判断条件直接改为为一段subtask的开始
+            if self.total_timesteps[0]==0:
+            # if self.prev_task_type != "description":
                 # TODO: Use this method for imagenav as well
-                all_matches, all_confidences = get_matches_against_memory(
-                    self.instance_memory,
-                    clip_matching_fn,
-                    self.total_timesteps[0],
-                    language_goal=current_task["instruction"],
-                )
+                # 20250218 wxl 修改为数据集中的instruction
+                # 20250218 zht 必须要求record_instance_ids=True，也即是使用instance_memory时才在记忆中匹配
+                if self.record_instance_ids:
+                    all_matches, all_confidences = get_matches_against_memory(
+                        self.instance_memory,
+                        clip_matching_fn,
+                        self.total_timesteps[0],
+                        language_goal=current_task["instruction"],
+                    )
             else:
                 matches, confidences = clip_matching_fn(
                     np.expand_dims(obs.rgb, 0), current_task["instruction"]
@@ -661,6 +752,13 @@ class GoatAgent(Agent):
             # cluster goal points
             c = DBSCAN(eps=4, min_samples=1)
             data = np.array(goal_map[e].nonzero()).T
+            # 以下语句在_5 第一个subtask 报错ValueError: Found array with 0 sample(s) (shape=(0, 2)) while a minimum of 1 is required by DBSCAN.
+            # import pdb
+            # pdb.set_trace()
+            # print("解决ValueError")
+            #zht 20250211 不知道直接返回这个全是0的600*600的goal map是否会报错
+            if data.size == 0:
+                return goal_map 
             c.fit(data)
 
             # mask all points not in the largest cluster

@@ -101,6 +101,13 @@ class InstanceMemory:
         self.reset()
 
     def reset(self):
+        #20250219 clear() 以防爆显存
+        self.images.clear()
+        self.point_cloud.clear()
+        self.instance_views.clear()
+        self.unprocessed_views.clear()
+        self.timesteps.clear()
+        torch.cuda.empty_cache()
         self.images = [None for _ in range(self.num_envs)]
         self.point_cloud = [None for _ in range(self.num_envs)]
         self.instance_views = [{} for _ in range(self.num_envs)]
@@ -115,6 +122,11 @@ class InstanceMemory:
         # otherwise, create a new global instance with the given global_instance_id
 
         # get instance view
+        # import pdb
+        # pdb.set_trace()
+        # print("冲着更新instance view的函数去，第六跳，终于到InstanceMemory的函数里面了")
+        # print("这次的local_instance_id是", local_instance_id)
+        # print("这次的global_instance_id是", global_instance_id)
         instance_view = self.unprocessed_views[env_id].get(local_instance_id, None)
         if instance_view is None and self.debug_visualize:
             print(
@@ -122,15 +134,26 @@ class InstanceMemory:
                 local_instance_id,
                 "not found in unprocessed views",
             )
-
+        # import cv2
+        # import os
+        # out_path = "/home/zht/git_repo/workspaces/home-robot/zht/instance_memory/"
+        # timestep = self.timesteps[env_id]
+        # os.makedirs(out_path+f"/{timestep}/",exist_ok=True)
+        # print(f"这一帧一共有{len(self.unprocessed_views[env_id])}个部件")
+        # for i in range(1, len(self.unprocessed_views[env_id])+1):
+        #     cv2.imwrite(out_path+f"/{timestep}/{i}.png", self.unprocessed_views[env_id].get(i, None).cropped_image[:,:,[2,1,0]])
+        
         # get global instance
         global_instance = self.instance_views[env_id].get(global_instance_id, None)
+        # 如果global_instance_id对应的views是空的，也就是要新建一个未见过的instance，当前view作为第一个instance_view
         if global_instance is None:
             # create a new global instance
             global_instance = Instance()
+            # print("instance_view的category id是", instance_view.category_id)
             global_instance.category_id = instance_view.category_id
             global_instance.instance_views.append(instance_view)
             self.instance_views[env_id][global_instance_id] = global_instance
+        # 如果global_instance_id对应的views已经有东西了，那就在那个instance的instance_views里再加上当前view
         else:
             # add instance view to global instance
             global_instance.instance_views.append(instance_view)
@@ -156,6 +179,9 @@ class InstanceMemory:
                 "to global instance id",
                 global_instance_id,
             )
+            # import pdb
+            # pdb.set_trace()
+            # print("update instance完了，要回去了")
 
     def process_instances_for_env(
         self,
@@ -185,6 +211,10 @@ class InstanceMemory:
             )
         # unique instances
         instance_ids = torch.unique(instance_map)
+        # # zht 想看一下instance是如何识别保存的
+        # import pdb
+        # pdb.set_trace()
+        # print("此时instance_map早已求得，太晚了")
         for instance_id in instance_ids:
             # skip background
             if instance_id == 0:
