@@ -25,7 +25,7 @@
 
 #### step1:
 
-下载[goat](projects/habitat_goat/README.md)数据包，另外场景数据文件架构为 scene_datasets/hm3d/...
+下载[goat](projects/habitat_goat/README.md)数据包，另外场景数据文件架构为 ```scene_datasets/hm3d/...```
 
 #### step2: 
 
