@@ -57,8 +57,10 @@ if __name__ == "__main__":
     print("-" * 100)
 
     config = get_config(args.habitat_config_path, args.baseline_config_path)
-
-    all_scenes = os.listdir(os.path.dirname(config.habitat.dataset.data_path.format(split=config.habitat.dataset.split)) + "/content/")
+    config['habitat']['dataset']['data_path'] = 'data/datasets/goat/hm3d/val_seen/val_seen.json.gz'
+    
+    # all_scenes = os.listdir(os.path.dirname(config.habitat.dataset.data_path.format(split=config.habitat.dataset.split)) + "/content/")
+    all_scenes = os.listdir('data/datasets/goat/hm3d/val_seen/content/')
     all_scenes = sorted([x.split('.')[0] for x in all_scenes])
 
     if args.scene_idx != -1:

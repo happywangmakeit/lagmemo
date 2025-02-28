@@ -5,7 +5,7 @@
 from typing import Iterable, Tuple
 
 import numpy as np
-import sophus as sp
+import sophuspy as sp
 from scipy.spatial.transform import Rotation
 
 from home_robot.core.interfaces import Pose
