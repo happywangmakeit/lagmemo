@@ -21,9 +21,9 @@ sys.path.insert(
 from config_utils import get_config
 from habitat.core.env import Env
 
-from home_robot.agent.goat_agent.goat_agent import GoatAgent
-from home_robot.core.interfaces import DiscreteNavigationAction
-from home_robot_sim.env.habitat_goat_env.habitat_goat_env import HabitatGoatEnv
+from agent.lagmemo_agent.lagmemo_agent import GoatAgent
+from core.interfaces import DiscreteNavigationAction
+from env.habitat_lagmemo_env import HabitatGoatEnv
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -36,7 +36,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--baseline_config_path",
         type=str,
-        default="projects/habitat_goat/configs/agent/hm3d_eval_stretch.yaml",
+        default="project/config/agent/hm3d_eval_stretch.yaml",
         help="Path to config yaml",
     )
     parser.add_argument(

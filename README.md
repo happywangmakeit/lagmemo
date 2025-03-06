@@ -19,6 +19,10 @@ python -m pip install -e src
 git submodule update --init --recursive src/perception/detection/detic/Detic src/third_party/detectron2 src/third_party/contact_graspnet
 
 # dection module
+cd src/third_party
+python -m pip install -e detectron2
+cd ../..
+
 cd src/home_robot/home_robot/perception/detection/detic/Detic/
 pip install -r requirements.txt
 mkdir models
@@ -41,5 +45,12 @@ git submodule update --init --recursive src/third_party/habitat-lab
 python -m pip install -e src/third_party/habitat-lab/habitat-lab
 python -m pip install -e src/third_party/habitat-lab/habitat-baselines
 python -m pip install "git+https://github.com/facebookresearch/pytorch3d.git" # this is not neccessary if you have pytorch3d in your pip list
+
+# switch to goat branch
+cd src/third_party/habitat-lab
+git checkout home-robot_goat_support
+pip install -e habitat-lab
+pip install -e habitat-baselines
+cd ../../..
 
 ```
