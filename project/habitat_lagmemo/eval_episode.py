@@ -11,7 +11,7 @@ from tqdm import tqdm
 # TODO Install home_robot, home_robot_sim and remove this
 sys.path.insert(
     0,
-    str(Path(__file__).resolve().parent.parent.parent / "src/home_robot"),
+    str(Path(__file__).resolve().parent.parent.parent / "src"),
 )
 sys.path.insert(
     0,

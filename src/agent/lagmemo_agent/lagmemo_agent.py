@@ -27,8 +27,8 @@ from home_robot.mapping.semantic.constants import MapConstants as MC
 from home_robot.mapping.semantic.instance_tracking_modules import InstanceMemory
 from home_robot.perception.detection.maskrcnn.coco_categories import coco_categories
 
-from .goat_agent_module import GoatAgentModule
-from .goat_matching import GoatMatching
+from .lagmemo_agent_module import GoatAgentModule
+from .lagmemo_matching import GoatMatching
 
 # For visualizing exploration issues
 debug_frontier_map = False
