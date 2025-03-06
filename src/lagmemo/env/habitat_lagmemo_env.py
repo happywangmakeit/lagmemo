@@ -18,13 +18,13 @@ from lagmemo.utils.constants import (
 )
 from lagmemo.env.habitat_abstract_env import HabitatEnv
 from lagmemo.env.visualizer import Visualizer
-# from lagmemo.perception.detection.maskrcnn.maskrcnn_perception import (
-#     MaskRCNNPerception,
-# )
+from lagmemo.perception.detection.maskrcnn.maskrcnn_perception import (
+    MaskRCNNPerception,
+)
 
 from lagmemo.perception.constants import df as hm3d_mapping_df
 
-all_ovon_categories_path = "/home/wxl/lagmemo/goat_sim/home-robot/data/goal_list.json"
+all_ovon_categories_path = "data/goal_list.json"
 with open(all_ovon_categories_path, "r") as f:
     all_ovon_categories = json.load(f)
 
@@ -32,7 +32,7 @@ with open(all_ovon_categories_path, "r") as f:
 all_ovon_categories = sorted(list(set(all_ovon_categories)))
 
 all_ovon_categories = ["_".join(x.split(" ")) for x in all_ovon_categories]
-all_ovon_categories =['countertop', 'chair', 'bed', "cabinet", "sink_cabinet", "cloth", "bathroom_cabinet", "couch", "oven_and_stove", "towel", "blanket"]
+# all_ovon_categories =['countertop', 'chair', 'bed', "cabinet", "sink_cabinet", "cloth", "bathroom_cabinet", "couch", "oven_and_stove", "towel", "blanket"]
 class HabitatGoatEnv(HabitatEnv):
     semantic_category_mapping: Union[HM3DtoCOCOIndoor]
 
@@ -129,12 +129,12 @@ class HabitatGoatEnv(HabitatEnv):
             DeticPerception,
         )
         
-        all_ovon_categories_path = "/srv/flash1/rramrakhya3/fall_2023/goat/data/hm3d_meta/ovon_categories_final_split.json"
+        all_ovon_categories_path = "data/goal_list.json"
         with open(all_ovon_categories_path, "r") as f:
             all_ovon_categories = json.load(f)
 
         # all_ovon_categories = [y for x in all_ovon_categories.values() for y in x if type(y) == str]
-        all_ovon_categories = sorted(list(set(all_ovon_categories["val_seen"])))
+        all_ovon_categories = sorted(list(set(all_ovon_categories)))
 
         all_ovon_categories = ["_".join(x.split(" ")) for x in all_ovon_categories]
 

@@ -21,9 +21,9 @@ from detectron2.modeling import build_model
 from detectron2.utils.logger import setup_logger
 from detectron2.utils.visualizer import ColorMode, VisImage, Visualizer
 
-from home_robot.core.abstract_perception import PerceptionModule
-from home_robot.core.interfaces import Observations
-from home_robot.perception.detection.utils import filter_depth, overlay_masks
+from lagmemo.core.abstract_perception import PerceptionModule
+from lagmemo.core.interfaces import Observations
+from lagmemo.perception.detection.utils import filter_depth, overlay_masks
 
 from .coco_categories import coco_categories, coco_categories_mapping
 

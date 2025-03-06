@@ -10,3 +10,6 @@
 [submodule "src/lagmemo/perception/detection/detic/Detic"]
 	path = src/lagmemo/perception/detection/detic/Detic
 	url = https://github.com/facebookresearch/Detic.git
+[submodule "src/lagmemo/agent/imagenav_agent/SuperGluePretrainedNetwork"]
+	path = src/lagmemo/agent/imagenav_agent/SuperGluePretrainedNetwork
+	url = https://github.com/mukulkhanna/SuperGluePretrainedNetwork.git

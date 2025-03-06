@@ -13,17 +13,17 @@ conda env create -n lagmemo -f environment.yml
 conda activate lagmemo
 
 # Install the core package
-python -m pip install -e src
+python -m pip install -e src/lagmemo
 
 # initialize submodules
-git submodule update --init --recursive src/perception/detection/detic/Detic src/third_party/detectron2 src/third_party/contact_graspnet
+git submodule update --init --recursive src/lagmemo/perception/detection/detic/Detic src/third_party/detectron2 src/third_party/contact_graspnet
 
 # dection module
 cd src/third_party
-python -m pip install -e detectron2
+python -m pip install -e detectron2 # torch2.1.2+cu118 is available if get error here, and some mistake maybe caused by cpu version torch, please pay attention
 cd ../..
 
-cd src/home_robot/home_robot/perception/detection/detic/Detic/
+cd src/lagmemo/perception/detection/detic/Detic/
 pip install -r requirements.txt
 mkdir models
 wget https://dl.fbaipublicfiles.com/detic/Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size.pth -O models/Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size.pth --no-check-certificate
