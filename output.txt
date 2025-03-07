@@ -1,0 +1,15 @@
+.
+├── data
+│   ├── goal_list.json
+│   ├── datasets
+│   │   └── goat
+│   │   |   └── hm3d
+|   |   |   |   └── v1
+|   │   │   │   │   ├── train
+|   │   │   │   │   ├── val_seen
+|   │   │   │   │   ├── val_unseen
+|   │   │   │   │   └── val_seen_synonyms
+│   ├── scene_datasets
+│   │   └── hm3d
+│   │   │   ├── 00800-TEEsavR23oF
+│   │   │   ├── ...

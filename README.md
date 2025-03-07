@@ -13,7 +13,29 @@ ln -s hm3d_path /path/to/data/scene_datasets/hm3d
 
 ```
 
+The file structure should be as follow:
+
+```bash
+.
+├── data
+│   ├── goal_list.json
+│   ├── datasets
+│   │   └── goat
+│   │   |   └── hm3d
+|   |   |   |   └── v1
+|   │   │   │   │   ├── train
+|   │   │   │   │   ├── val_seen
+|   │   │   │   │   ├── val_unseen
+|   │   │   │   │   └── val_seen_synonyms
+│   ├── scene_datasets
+│   │   └── hm3d
+│   │   │   ├── 00800-TEEsavR23oF
+│   │   │   ├── ...
+```
+
 ## Installation
+
+**If you get an error when following this tutorial, please read the `Problem` section first before taking next action**
 
 ```bash
 
@@ -26,7 +48,7 @@ conda activate lagmemo
 python -m pip install -e src/lagmemo
 
 # initialize submodules
-git submodule update --init --recursive src/lagmemo/perception/detection/detic/Detic src/third_party/detectron2 src/third_party/contact_graspnet
+git submodule update --init --recursive src/lagmemo/perception/detection/detic/Detic src/third_party/detectron2 src/third_party/contact_graspnet src/lagmemo/agent/imagenav_agent/SuperGluePretrainedNetwork
 
 # dection module
 cd src/third_party
@@ -70,12 +92,28 @@ python project/habitat_lagmemo/eval_episode.py
 
 ## Problem
 
-When having problem with installing detectron2:
+#### When having problem with installing detectron2:
 
 ```bash
 conda install pytorch torchvision torchaudio cudatoolkit=11.2 -c pytorch # insatll torch2.5.1
 python -m pip install -e detectron2
 conda uninstall libtorch # downgrade torch version
-pip install torch==2.1.2+cu118 torchvision==0.16.2+cu118 torchaudio==2.1.2+cu118 --index-url https://download.pytorch.org/whl/cu18 # install torch2.1.2 cu118 which is confirmed to be correct
+pip install torch==2.1.2+cu118 torchvision==0.16.2+cu118 torchaudio==2.1.2+cu118 --index-url https://download.pytorch.org/whl/cu118 # install torch2.1.2 cu118 which is confirmed to be correct
 
 ```
+
+#### When having problem with "AttributeError:'dict'object has no attribute 'env_specs'"
+
+Change all registry.env_specs to registry.keys()
+
+#### If you have problem with numpy 2.0.2 when installing habitat_lab, and habitat_lab is installed successfully
+
+```bash
+pip install numpy==1.23.5 # and continue next step
+```
+
+#### When having problem with command "python -m pip install "git+https://github.com/facebookresearch/pytorch3d.git""
+
+It's not neccessary if you have pytorch3d in your pip list
+
+#### 

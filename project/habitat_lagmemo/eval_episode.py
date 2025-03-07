@@ -161,7 +161,7 @@ if __name__ == "__main__":
                 print('-------------------------')
                 print(f"{scene_id}_{episode_id}_{current_task_idx}", ep_metrics)
                 print('-------------------------')
-                import ipdb;ipdb.set_trace()
+                # import ipdb;ipdb.set_trace()
 
                 all_subtask_metrics.append(ep_metrics)
                 if not env.episode_over:
