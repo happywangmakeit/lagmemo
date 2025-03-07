@@ -20,7 +20,7 @@ git submodule update --init --recursive src/lagmemo/perception/detection/detic/D
 
 # dection module
 cd src/third_party
-python -m pip install -e detectron2 # torch2.1.2+cu118 is available if get error here, and some mistake maybe caused by cpu version torch, please pay attention
+python -m pip install -e detectron2 # torch2.1.2+cu118 is available if get error here, and some mistake maybe caused by cpu version torch, please pay attention, refer to Problem section
 cd ../..
 
 cd src/lagmemo/perception/detection/detic/Detic/
@@ -52,5 +52,17 @@ git checkout home-robot_goat_support
 pip install -e habitat-lab
 pip install -e habitat-baselines
 cd ../../..
+
+```
+
+## Problem
+
+When having problem with installing detectron2:
+
+```bash
+conda install pytorch torchvision torchaudio cudatoolkit=11.2 -c pytorch # insatll torch2.5.1
+conda uninstall libtorch # downgrade torch version
+pip install torch==2.1.2+cu118 torchvision==0.16.2+cu118 torchaudio==2.1.2+cu118 --index-url https://download.pytorch.org/whl/cu18 # install torch2.1.2 cu118 which is confirmed to be correct
+python -m pip install -e detectron2
 
 ```
