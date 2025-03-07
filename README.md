@@ -1,5 +1,5 @@
 
-## This a project for Lagmemo
+## This is a project for Lagmemo
 
 **some details coming soon...**
 
@@ -36,7 +36,7 @@ mkdir -p data/checkpoints
 cd data/checkpoints
 wget https://dl.fbaipublicfiles.com/habitat/data/baselines/v1/ovmm_baseline_home_robot_challenge_2023.zip
 unzip ovmm_baseline_home_robot_challenge_2023.zip
-cd LAGMEMO_ROOT
+cd LAGMEMO_ROOT # return repo's root, should be changed to your own path
 
 # simulation environment
 conda env update -f src/environment.yml
