@@ -8,7 +8,7 @@ from argparse import Namespace
 import numpy as np
 import torch
 
-from utils.constants import (
+from lagmemo.utils.constants import (
     MAX_DEPTH_REPLACEMENT_VALUE,
     MIN_DEPTH_REPLACEMENT_VALUE,
 )

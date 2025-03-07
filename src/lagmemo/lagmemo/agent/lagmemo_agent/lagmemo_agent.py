@@ -15,17 +15,17 @@ import torch
 from sklearn.cluster import DBSCAN
 from torch.nn import DataParallel
 
-import utils.pose as pu
+import lagmemo.utils.pose as pu
 
-from agent.imagenav_agent.visualizer import NavVisualizer
-from core.abstract_agent import Agent
-from core.interfaces import DiscreteNavigationAction, Observations
-from mapping.semantic.categorical_2d_semantic_map_state import (
+from lagmemo.agent.imagenav_agent.visualizer import NavVisualizer
+from lagmemo.core.abstract_agent import Agent
+from lagmemo.core.interfaces import DiscreteNavigationAction, Observations
+from lagmemo.mapping.semantic.categorical_2d_semantic_map_state import (
     Categorical2DSemanticMapState,
 )
-from mapping.semantic.constants import MapConstants as MC
-from mapping.semantic.instance_tracking_modules import InstanceMemory
-from perception.detection.maskrcnn.coco_categories import coco_categories
+from lagmemo.mapping.semantic.constants import MapConstants as MC
+from lagmemo.mapping.semantic.instance_tracking_modules import InstanceMemory
+from lagmemo.perception.detection.maskrcnn.coco_categories import coco_categories
 
 from .lagmemo_agent_module import GoatAgentModule
 from .lagmemo_matching import GoatMatching
@@ -140,12 +140,12 @@ class GoatAgent(Agent):
             and config.AGENT.PLANNER.planner_type == "old"
         ):
             print("Using old planner")
-            from navigation_planner.old_discrete_planner import (
+            from lagmemo.navigation_planner.old_discrete_planner import (
                 DiscretePlanner,
             )
         else:
             print("Using new planner")
-            from navigation_planner.discrete_planner import DiscretePlanner
+            from lagmemo.navigation_planner.discrete_planner import DiscretePlanner
 
         self.planner = DiscretePlanner(
             turn_angle=config.ENVIRONMENT.turn_angle,

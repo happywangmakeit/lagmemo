@@ -7,9 +7,9 @@
 [submodule "src/third_party/contact_graspnet"]
 	path = src/third_party/contact_graspnet
 	url = https://github.com/cpaxton/contact_graspnet.git
-[submodule "src/lagmemo/perception/detection/detic/Detic"]
-	path = src/lagmemo/perception/detection/detic/Detic
+[submodule "src/lagmemo/lagmemo/perception/detection/detic/Detic"]
+	path = src/lagmemo/lagmemo/perception/detection/detic/Detic
 	url = https://github.com/facebookresearch/Detic.git
-[submodule "src/lagmemo/agent/imagenav_agent/SuperGluePretrainedNetwork"]
-	path = src/lagmemo/agent/imagenav_agent/SuperGluePretrainedNetwork
+[submodule "src/lagmemo/lagmemo/agent/imagenav_agent/SuperGluePretrainedNetwork"]
+	path = src/lagmemo/lagmemo/agent/imagenav_agent/SuperGluePretrainedNetwork
 	url = https://github.com/mukulkhanna/SuperGluePretrainedNetwork.git

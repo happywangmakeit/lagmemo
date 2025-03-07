@@ -12,9 +12,9 @@ import torch
 from torchvision.transforms import ToPILImage
 from tqdm import tqdm
 
-from agent.imagenav_agent.superglue import Matching
-from mapping.semantic.constants import MapConstants as MC
-from mapping.semantic.instance_tracking_modules import InstanceMemory
+from lagmemo.agent.imagenav_agent.superglue import Matching
+from lagmemo.mapping.semantic.constants import MapConstants as MC
+from lagmemo.mapping.semantic.instance_tracking_modules import InstanceMemory
 
 matplotlib.use("Agg")
 MIN_PIXELS = 1000

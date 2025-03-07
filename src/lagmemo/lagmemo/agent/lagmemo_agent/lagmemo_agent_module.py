@@ -5,12 +5,12 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from mapping.semantic.categorical_2d_semantic_map_module import (
+from lagmemo.mapping.semantic.categorical_2d_semantic_map_module import (
     Categorical2DSemanticMapModule,
 )
-from mapping.semantic.constants import MapConstants as MC
-from mapping.semantic.instance_tracking_modules import InstanceMemory
-from navigation_policy.language_navigation.languagenav_frontier_exploration_policy import (
+from lagmemo.mapping.semantic.constants import MapConstants as MC
+from lagmemo.mapping.semantic.instance_tracking_modules import InstanceMemory
+from lagmemo.navigation_policy.language_navigation.languagenav_frontier_exploration_policy import (
     LanguageNavFrontierExplorationPolicy,
 )
 

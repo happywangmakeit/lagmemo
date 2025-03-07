@@ -9,8 +9,8 @@ import torch
 import torch.nn as nn
 from sklearn.cluster import DBSCAN
 
-from mapping.semantic.constants import MapConstants as MC
-from utils.morphology import binary_dilation
+from lagmemo.mapping.semantic.constants import MapConstants as MC
+from lagmemo.utils.morphology import binary_dilation
 
 
 class LanguageNavFrontierExplorationPolicy(nn.Module):

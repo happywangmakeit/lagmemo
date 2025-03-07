@@ -48,14 +48,14 @@ conda activate lagmemo
 python -m pip install -e src/lagmemo
 
 # initialize submodules
-git submodule update --init --recursive src/lagmemo/perception/detection/detic/Detic src/third_party/detectron2 src/third_party/contact_graspnet src/lagmemo/agent/imagenav_agent/SuperGluePretrainedNetwork
+git submodule update --init --recursive src/lagmemo/lagmemo/perception/detection/detic/Detic src/third_party/detectron2 src/third_party/contact_graspnet src/lagmemo/lagmemo/agent/imagenav_agent/SuperGluePretrainedNetwork
 
 # dection module
 cd src/third_party
 python -m pip install -e detectron2 # torch2.1.2+cu118 is available if get error here, and some mistake maybe caused by cpu version torch, please pay attention, refer to Problem section
 cd ../..
 
-cd src/lagmemo/perception/detection/detic/Detic/
+cd src/lagmemo/lagmemo/perception/detection/detic/Detic/
 pip install -r requirements.txt
 mkdir models
 wget https://dl.fbaipublicfiles.com/detic/Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size.pth -O models/Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size.pth --no-check-certificate

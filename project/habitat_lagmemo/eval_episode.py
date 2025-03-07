@@ -21,9 +21,9 @@ sys.path.insert(
 from config_utils import get_config
 from habitat.core.env import Env
 
-from agent.lagmemo_agent.lagmemo_agent import GoatAgent
-from core.interfaces import DiscreteNavigationAction
-from env.habitat_lagmemo_env import HabitatGoatEnv
+from lagmemo.agent.lagmemo_agent.lagmemo_agent import GoatAgent
+from lagmemo.core.interfaces import DiscreteNavigationAction
+from lagmemo.env.habitat_lagmemo_env import HabitatGoatEnv
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

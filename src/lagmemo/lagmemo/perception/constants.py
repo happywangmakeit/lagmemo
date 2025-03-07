@@ -13,7 +13,7 @@ import pandas as pd
 from habitat.core.env import Env
 from habitat_sim.utils.common import d3_40_colors_rgb
 
-from utils.constants import (
+from lagmemo.utils.constants import (
     MAX_DEPTH_REPLACEMENT_VALUE,
     MIN_DEPTH_REPLACEMENT_VALUE,
 )

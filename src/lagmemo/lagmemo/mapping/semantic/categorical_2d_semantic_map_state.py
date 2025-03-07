@@ -7,9 +7,9 @@ from typing import Optional
 import numpy as np
 import torch
 
-from mapping.map_utils import MapSizeParameters, init_map_and_pose_for_env
-from mapping.semantic.constants import MapConstants as MC
-from mapping.semantic.instance_tracking_modules import InstanceMemory
+from lagmemo.mapping.map_utils import MapSizeParameters, init_map_and_pose_for_env
+from lagmemo.mapping.semantic.constants import MapConstants as MC
+from lagmemo.mapping.semantic.instance_tracking_modules import InstanceMemory
 
 
 class Categorical2DSemanticMapState:

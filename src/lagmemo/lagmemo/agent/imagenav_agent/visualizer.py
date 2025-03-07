@@ -18,13 +18,13 @@ from habitat.utils.visualizations.utils import draw_collision, images_to_video
 from natsort import natsorted
 from PIL import Image
 
-import utils.pose as pu
-from perception.constants import PaletteIndices as PI
-from perception.constants import languagenav_2categories_map_color_palette, languagenav_2categories_color_palette
-from perception.detection.maskrcnn.coco_categories import (
+import lagmemo.utils.pose as pu
+from lagmemo.perception.constants import PaletteIndices as PI
+from lagmemo.perception.constants import languagenav_2categories_map_color_palette, languagenav_2categories_color_palette
+from lagmemo.perception.detection.maskrcnn.coco_categories import (
     coco_categories_color_palette,
 )
-from utils.visualization import draw_line, get_contour_points
+from lagmemo.utils.visualization import draw_line, get_contour_points
 
 MAP_COLOR_PALETTE = [
     int(x * 255.0)

@@ -16,13 +16,13 @@ from skimage import measure
 from torch import IntTensor, Tensor
 from torch.nn import functional as F
 
-import mapping.map_utils as mu
-import utils.depth as du
-import utils.pose as pu
-import utils.rotation as ru
-from mapping.semantic.constants import MapConstants as MC
-from mapping.semantic.instance_tracking_modules import InstanceMemory
-from utils.spot import draw_circle_segment, fill_convex_hull
+import lagmemo.mapping.map_utils as mu
+import lagmemo.utils.depth as du
+import lagmemo.utils.pose as pu
+import lagmemo.utils.rotation as ru
+from lagmemo.mapping.semantic.constants import MapConstants as MC
+from lagmemo.mapping.semantic.instance_tracking_modules import InstanceMemory
+from lagmemo.utils.spot import draw_circle_segment, fill_convex_hull
 
 # For debugging input and output maps - shows matplotlib visuals
 debug_maps = False
@@ -500,7 +500,7 @@ class Categorical2DSemanticMapModule(nn.Module):
         )
 
         if self.debug_mode:
-            from utils.point_cloud import show_point_cloud
+            from lagmemo.utils.point_cloud import show_point_cloud
 
             rgb = obs[:, :3, :: self.du_scale, :: self.du_scale].permute(0, 2, 3, 1)
             xyz = point_cloud_t[0].reshape(-1, 3)
