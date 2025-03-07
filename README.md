@@ -1,7 +1,7 @@
 
 ## This a project for Lagmemo
 
-**some details is coming soon...**
+**some details coming soon...**
 
 ## Installation
 
@@ -52,6 +52,9 @@ git checkout home-robot_goat_support
 pip install -e habitat-lab
 pip install -e habitat-baselines
 cd ../../..
+
+# really to start!
+python project/habitat_lagmemo/eval_episode.py
 
 ```
 
