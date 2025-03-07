@@ -3,6 +3,16 @@
 
 **some details coming soon...**
 
+## Data
+
+please download goat episode dataset from [here](https://drive.google.com/file/d/1N0UbpXK3v7oTphC4LoDqlNeMHbrwkbPe/view?usp=sharing), and put it as /data/datasets/goat/hm3d/...
+
+```bash
+# scene datasets
+ln -s hm3d_path /path/to/data/scene_datasets/hm3d
+
+```
+
 ## Installation
 
 ```bash
