@@ -5,7 +5,7 @@
 
 ## Data
 
-please download goat episode dataset from [here](https://drive.google.com/file/d/1N0UbpXK3v7oTphC4LoDqlNeMHbrwkbPe/view?usp=sharing), and put it as /data/datasets/goat/hm3d/...
+please download goat episode dataset from [here](https://drive.google.com/file/d/1N0UbpXK3v7oTphC4LoDqlNeMHbrwkbPe/view?usp=sharing), and put it as ***/data/datasets/goat/hm3d/...***
 
 ```bash
 # scene datasets
@@ -46,7 +46,7 @@ mkdir -p data/checkpoints
 cd data/checkpoints
 wget https://dl.fbaipublicfiles.com/habitat/data/baselines/v1/ovmm_baseline_home_robot_challenge_2023.zip
 unzip ovmm_baseline_home_robot_challenge_2023.zip
-cd LAGMEMO_ROOT # return repo's root, should be changed to your own path
+cd LAGMEMO_ROOT # return to repo's root, should be changed to your own path
 
 # simulation environment
 conda env update -f src/environment.yml
