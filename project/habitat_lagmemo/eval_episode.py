@@ -1,3 +1,11 @@
+import warnings
+warnings.filterwarnings("ignore")
+import os
+
+# suppress unnecessary output from habitat
+os.environ['MAGNUM_LOG'] = 'quiet'
+os.environ['HABITAT_SIM_LOG'] = 'quiet'
+
 import argparse
 import json
 import os
@@ -30,7 +38,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--habitat_config_path",
         type=str,
-        default="goat/modular_goat_hm3d_stretch.yaml",
+        default="project/config/habitat/lagmemo_hm3d_stretch.yaml",
         help="Path to config yaml",
     )
     parser.add_argument(
@@ -51,6 +59,12 @@ if __name__ == "__main__":
         nargs=argparse.REMAINDER,
         help="Modify config options from command line",
     )
+    parser.add_argument(
+        "--scenes",
+        type=str,
+        default="all",
+        help="Scenes to run, write one name or 'all'",
+    )
     print("Arguments:")
     args = parser.parse_args()
     print(json.dumps(vars(args), indent=4))
@@ -62,11 +76,10 @@ if __name__ == "__main__":
     # all_scenes = os.listdir(os.path.dirname(config.habitat.dataset.data_path.format(split=config.habitat.dataset.split)) + "/content/")
     all_scenes = os.listdir('data/datasets/goat/hm3d/val_seen/content/')
     all_scenes = sorted([x.split('.')[0] for x in all_scenes])
-
-    if args.scene_idx != -1:
-        scene_start = args.scene_idx * 5
-        config.habitat.dataset.content_scenes = all_scenes[scene_start:scene_start+5]
-
+    if args.scenes == "all":
+        config.habitat.dataset.content_scenes = all_scenes
+    else:
+        config.habitat.dataset.content_scenes = [args.scenes]
     # config.habitat.dataset.content_scenes = ["TEEsavR23oF"] # TODO: for debugging. REMOVE later.
 
     config.NUM_ENVIRONMENTS = 1
@@ -87,8 +100,6 @@ if __name__ == "__main__":
         env.reset()
         agent.reset()
 
-        old_distance_to_goal = None
-        ctr = 0
 
         t = 0
 
@@ -143,17 +154,6 @@ if __name__ == "__main__":
             )
             pbar.update(1)
 
-            if env.get_episode_metrics()["goat_distance_to_sub-goal"] == old_distance_to_goal:
-                ctr += 1
-
-                if ctr > 20:
-                    print("Agent was stuck. Stopping episode.")
-                    action = DiscreteNavigationAction.STOP
-                    ctr = 0
-            else:
-                ctr = 0
-            
-            old_distance_to_goal = env.get_episode_metrics()["goat_distance_to_sub-goal"]
 
             if action == DiscreteNavigationAction.STOP:
                 ep_metrics = env.get_episode_metrics()

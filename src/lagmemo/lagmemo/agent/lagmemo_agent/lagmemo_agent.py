@@ -202,6 +202,9 @@ class GoatAgent(Agent):
         self.goal_pose = None
         self.goal_filtering = config.AGENT.SEMANTIC_MAP.goal_filtering
         self.prev_task_type = None
+        
+        self.prev_position = None
+        self.ctr = 0
 
     # ------------------------------------------------------------------
     # Inference methods to interact with vectorized simulation
@@ -442,6 +445,8 @@ class GoatAgent(Agent):
         self.goal_image = None
         self.goal_mask = None
         self.goal_image_keypoints = None
+        self.prev_position = None
+        self.ctr = 0
 
     def score_thresh(self, task_type):
         # If we have fully explored the environment, set the matching threshold to 0.0
@@ -532,6 +537,20 @@ class GoatAgent(Agent):
         # t3 = time.time()
         # print(f"Planning: {t3 - t2:.2f}")
 
+        # deal with stuck situation, if the agent is stuck for 20 steps, call STOP
+        current_position = obs.gps
+        if self.prev_position is None:
+            self.prev_position = current_position
+        if np.linalg.norm(np.array(current_position) - np.array(self.prev_position)) < 0.001:
+            self.ctr += 1
+            if self.ctr > 20:
+                print("The agent is stuck, calling STOP")
+                action = DiscreteNavigationAction.STOP
+                self.ctr = 0
+        else:
+            self.ctr = 0
+        self.prev_position = current_position  
+
         if (
             self.sub_task_timesteps[0][self.current_task_idx]
             >= self.max_steps # [self.current_task_idx]
@@ -608,6 +627,8 @@ class GoatAgent(Agent):
                     self.num_environments, 1, dtype=bool, device=self.device
                 )
                 self.reset_sub_episode()
+                self.prev_position = None
+                self.ctr = 0
         self.prev_task_type = task_type
         return action, info
 
