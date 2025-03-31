@@ -5,12 +5,12 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from lagmemo.mapping.semantic.categorical_2d_semantic_map_module import (
+from lagmemo.mapping.semantic.categorical_2d_semantic_map_module_frontier import (
     Categorical2DSemanticMapModule,
 )
 from lagmemo.mapping.semantic.constants import MapConstants as MC
 from lagmemo.mapping.semantic.instance_tracking_modules import InstanceMemory
-from lagmemo.navigation_policy.language_navigation.languagenav_frontier_exploration_policy import (
+from lagmemo.navigation_policy.frontier_navigation.languagenav_frontier_exploration_policy import (
     LanguageNavFrontierExplorationPolicy,
 )
 
@@ -111,6 +111,7 @@ class GoatAgentModule(nn.Module):
         score_thresh=0.0,
         seq_obstacle_locations=None,
         seq_free_locations=None,
+        camera_pose_yaw = None,
     ):
         """Update maps and poses with a sequence of observations, and predict
         high-level goals from map features.
@@ -189,6 +190,7 @@ class GoatAgentModule(nn.Module):
             seq_obstacle_locations=seq_obstacle_locations,
             seq_free_locations=seq_free_locations,
             blacklist_target=blacklist_target,
+            camera_pose_yaw = camera_pose_yaw,
         )
 
         # t1 = time.time()
@@ -200,7 +202,7 @@ class GoatAgentModule(nn.Module):
         # Compute the frontier map here
         # frontier_map = (map_features[:, [MC.EXPLORED_MAP], :, :] == 0).float()
         # MC.EXPLORED_MAP = 1 there
-        frontier_map = self.policy.get_frontier_map(map_features)
+        frontier_map = self.policy.get_frontier_map(map_features,wxl_frontier=True)
         
         # 查看frontier map， wxl
         # frontier_array= np.array(frontier_map.cpu()).reshape((480,480))
