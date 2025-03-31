@@ -2,7 +2,7 @@ BASE_TASK_CONFIG_PATH: configs/task/hm3d_challenge2022_val.yaml
 
 NO_GPU: 0                 # 1: ignore IDs above and run on CPU, 0: run on GPUs with IDs above
 NUM_ENVIRONMENTS: 35      # number of environments (per agent process)
-DUMP_LOCATION: datadump   # path to dump models and log
+DUMP_LOCATION: datadump_debug_nostretch_pdb   # path to dump models and log
 EXP_NAME: openvocab_v0.1.1_gt_semantics_600    # experiment name
 VISUALIZE: 0              # 1: render observation and predicted semantic map, 0: no visualization
 PRINT_IMAGES: 1           # 1: save visualization as images, 0: no image saving
@@ -18,10 +18,10 @@ ENVIRONMENT:
   hfov: 79.0              # horizontal field of view (in degrees)
   min_depth: 0.5          # minimum depth for depth sensor (in metres)
   max_depth: 5.0          # maximum depth for depth sensor (in metres)
-  max_num_sub_task_episodes: 5
+  max_num_sub_task_episodes: 20
 
 AGENT:
-  max_steps: 500          # maximum number of steps before stopping an episode
+  max_steps: 200          # maximum number of steps before stopping an episode
   panorama_start: 1       # 1: turn around 360 degrees when starting an episode, 0: don't
   exploration_strategy: seen_frontier  # exploration strategy ("seen_frontier", "been_close_to_frontier")
   radius: 0.05            # robot radius (in meters)
@@ -35,11 +35,11 @@ AGENT:
     vision_range: 100        # diameter of local map region visible by the agent (in cells)
     global_downscaling: 2    # ratio of global over local map
     du_scale: 4              # frame downscaling before projecting to point cloud
-    cat_pred_threshold: 5.0  # number of depth points to be in bin to classify it as a certain semantic category
+    cat_pred_threshold: 1.0  # number of depth points to be in bin to classify it as a certain semantic category
     exp_pred_threshold: 1.0  # number of depth points to be in bin to consider it as explored
     map_pred_threshold: 1.0  # number of depth points to be in bin to consider it as obstacle
     explored_radius: 150     # radius (in centimeters) of visually explored region
-    been_close_to_radius: 200  # radius (in centimeters) of been close to region
+    been_close_to_radius: 100  # radius (in centimeters) of been close to region
     target_blacklisting_radius: 100 # radius (in centimeters) of region around goal to blacklist if object isn't a valid target
     must_explore_close: False
     min_obs_height_cm: 10    # minimum height (in centimeters) of obstacle to be considered as obstacle
