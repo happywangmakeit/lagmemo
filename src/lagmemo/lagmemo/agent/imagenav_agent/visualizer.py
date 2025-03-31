@@ -204,6 +204,8 @@ class NavVisualizer:
         instance_map: Optional[np.ndarray] = None,
         short_term_goal: Optional[np.ndarray] = None,
         goal_pose = None,
+        frontiers = None,
+        goal_text = None,
     ) -> None:
         """Visualize frame input and semantic map.
 
@@ -234,7 +236,7 @@ class NavVisualizer:
         if dilated_obstacle_map is not None:
             obstacle_map = dilated_obstacle_map
 
-        goal_frame = self.make_goal(last_goal_image)
+        goal_frame = self.make_goal(last_goal_image) if last_goal_image is not None else None
 
         obs_frame = self.make_observations(
             rgb_frame,
@@ -261,20 +263,65 @@ class NavVisualizer:
 
         kp_frame = np.ones_like(goal_frame) * 255
         # kp_frame = self.make_keypoint(timestep)
+        
+        # # wxl, visualize the frontier map
+        agent_radius = 0.18 # 0.36
+        pixels_per_meter = 20
+        area_thresh = 1.0
+        kernel_size = pixels_per_meter * agent_radius * 2
+        _area_thresh_in_pixels = area_thresh * (pixels_per_meter**2)
+        # round kernel_size to nearest odd number
+        kernel_size = int(kernel_size) + (int(kernel_size) % 2 == 0)
+        _navigable_kernel = np.ones((kernel_size, kernel_size), np.uint8)
 
-        if td_map_frame is None:
+        obstacle_mask = np.rint(np.array(obstacle_map)) == 1
+        navigable_map = 1 - cv2.dilate(
+            obstacle_mask.astype(np.uint8),
+            _navigable_kernel,
+            iterations=1,
+        ).astype(np.uint8)
+        explored_area = cv2.dilate(
+            explored_map.astype(np.uint8),
+            np.ones((5, 5), np.uint8),
+            iterations=1,
+        )
+        frontier_frame = cv2.cvtColor(navigable_map * 255, cv2.COLOR_GRAY2BGR)
+        frontier_frame[explored_area > 0] = (127, 127, 127)
+        for point in frontiers:
+            point_int = (int(point[0]), int(point[1]))
+            cv2.circle(frontier_frame, point_int, radius=5, color=(255,0,0), thickness=2)
+        # # end
+
+        # 添加object/description map, wxl, 2025.2.21
+        if td_map_frame is None and goal_frame is not None:
             frame = np.concatenate(
-                [goal_frame, obs_frame, map_pred_frame, sem_frame], axis=1
+                [goal_frame, obs_frame, map_pred_frame, frontier_frame], axis=1
             )
+        elif goal_frame is None:
+            # import ipdb; ipdb.set_trace()
+            if td_map_frame is None:
+                obs_frame = self.pad_frame_height(obs_frame, frontier_frame.shape[0])
+                map_pred_frame = self.pad_frame_height(map_pred_frame, frontier_frame.shape[0])
+                frame = np.concatenate(
+                    [obs_frame, map_pred_frame, frontier_frame], axis=1
+                )
+            else:
+                obs_frame = self.pad_frame_height(obs_frame, frontier_frame.shape[0])
+                upper_frame = np.concatenate([obs_frame, frontier_frame], axis=1)
+                lower_frame = np.concatenate([map_pred_frame, td_map_frame], axis=1)
+                lower_frame = self.pad_frame(
+                    lower_frame,
+                    upper_frame.shape[1],
+                )
+                frame = np.concatenate([upper_frame, lower_frame], axis=0)
         else:
-            # upper_frame = np.concatenate([goal_frame, obs_frame, sem_frame], axis=1)
-            # lower_frame = self.pad_frame(
-            #     np.concatenate([map_pred_frame, td_map_frame], axis=1),
-            #     upper_frame.shape[1],
-            # )
-            lower_frame = np.concatenate([map_pred_frame, td_map_frame], axis=1)
-            upper_frame = np.concatenate([goal_frame, obs_frame, sem_frame], axis=1)
-
+            obs_frame = self.pad_frame_height(obs_frame, frontier_frame.shape[0])
+            goal_frame = self.pad_frame_height(goal_frame, frontier_frame.shape[0])
+            upper_frame = np.concatenate([goal_frame, obs_frame, frontier_frame], axis=1)
+            lower_frame = self.pad_frame(
+                np.concatenate([map_pred_frame, td_map_frame], axis=1),
+                upper_frame.shape[1],
+            )
             if lower_frame.shape[1] > upper_frame.shape[1]:
                 upper_frame = self.pad_frame(
                     upper_frame,
@@ -287,6 +334,37 @@ class NavVisualizer:
                 )
 
             frame = np.concatenate([upper_frame, lower_frame], axis=0)
+        # end
+
+        # if td_map_frame is None:
+        #     frame = np.concatenate(
+        #         [goal_frame, obs_frame, map_pred_frame, sem_frame], axis=1
+        #     )
+        # else:
+        #     # upper_frame = np.concatenate([goal_frame, obs_frame, sem_frame], axis=1)
+        #     # lower_frame = self.pad_frame(
+        #     #     np.concatenate([map_pred_frame, td_map_frame], axis=1),
+        #     #     upper_frame.shape[1],
+        #     # )
+        #     lower_frame = np.concatenate([map_pred_frame, td_map_frame], axis=1)
+        #     upper_frame = np.concatenate([goal_frame, obs_frame, sem_frame], axis=1)
+
+        #     if lower_frame.shape[1] > upper_frame.shape[1]:
+        #         upper_frame = self.pad_frame(
+        #             upper_frame,
+        #             lower_frame.shape[1]
+        #         )
+        #     else:
+        #         lower_frame = self.pad_frame(
+        #             lower_frame,
+        #             upper_frame.shape[1]
+        #         )
+
+        #     frame = np.concatenate([upper_frame, lower_frame], axis=0)
+        
+        if goal_text is not None:
+            frame = self._put_text_on_image(frame, str(goal_text))
+        
         try:
             nframes = 1 if metrics is None else 5
         except Exception as e:
@@ -294,7 +372,57 @@ class NavVisualizer:
         for i in range(nframes):
             name = f"snapshot_{timestep}_{i}.png"
             cv2.imwrite(os.path.join(self.vis_dir, name), frame)
+    
+    # 在图片上添加文本，2025.2.24，wxl
+    def _put_text_on_image(
+        self,
+        vis_image,
+        text: str,
+        font_scale: int = 0.4,
+    ):
+        """
+        Place text at the center of the given bounding box.
+        """
+        h, w = vis_image.shape[:2]
+        # import ipdb; ipdb.set_trace()
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        font_scale = 0.6
+        text_color = (20, 20, 20)  # BGR
+        text_thickness = 1
 
+        textsize = cv2.getTextSize(text, font, font_scale, text_thickness)[0]
+        bbox_x_len = w  # 文本框宽度与图像宽度一致
+        bbox_y_len = int(textsize[1] * 1.5)  # 文本框高度为文本高度的1.5倍
+
+        # 计算文本框位置
+        bbox_x_start = (w - bbox_x_len) // 2  # 水平居中
+        bbox_y_start = h - bbox_y_len  # 位于图像底部
+        # The x coordinate at which the left edge of text needs to be placed
+        textX = (bbox_x_len - textsize[0]) // 2 + bbox_x_start
+        # The height at which base needs to be placed
+        textY = (bbox_y_len + textsize[1]) // 2 + bbox_y_start
+        return cv2.putText(
+            vis_image,
+            text,
+            (textX, textY),
+            font,
+            font_scale,
+            text_color,
+            text_thickness,
+            cv2.LINE_AA,
+        )
+    
+    # 水平拼接时纵向对齐，wxl
+    def pad_frame_height(self, frame: np.ndarray, height: int) -> np.ndarray:
+        """Pad the width of a frame to `width` centered white sides."""
+        h = frame.shape[0]
+        w = frame.shape[1]
+        left_bar = np.ones(((height - h)//2, w, 3), dtype=np.uint8) * 255
+        right_bar = (
+            np.ones(((height - h - left_bar.shape[0]), w, 3), dtype=np.uint8) * 255
+        )
+        return np.concatenate([left_bar, frame, right_bar], axis=0)
+    
     def pad_frame(self, frame: np.ndarray, width: int) -> np.ndarray:
         """Pad the width of a frame to `width` centered white sides."""
         h = frame.shape[0]

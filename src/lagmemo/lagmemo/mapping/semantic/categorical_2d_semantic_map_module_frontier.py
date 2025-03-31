@@ -863,7 +863,7 @@ class Categorical2DSemanticMapModule(nn.Module):
                 self.map_size_parameters
                 pixels_per_meter = self.map_size_parameters.local_map_size/(self.map_size_parameters.local_map_size_cm/100)# 20
                 area_thresh = 1.0
-                kernel_size = pixels_per_meter * agent_radius * 2
+                kernel_size = pixels_per_meter * agent_radius * 2 - 2
                 _area_thresh_in_pixels = area_thresh * (pixels_per_meter**2)
                 # round kernel_size to nearest odd number
                 kernel_size = int(kernel_size) + (int(kernel_size) % 2 == 0)
@@ -888,7 +888,7 @@ class Categorical2DSemanticMapModule(nn.Module):
                     # 实验中发现需要加一个pi/2才可以对得上，wxl
                     current_angle=pos[2]+np.pi/2,
                     fov=self.hfov,
-                    max_line_len=5 * pixels_per_meter,
+                    max_line_len=self.gaze_distance * pixels_per_meter,
                 )
                 new_explored_area = cv2.dilate(new_explored_area, np.ones((3, 3), np.uint8), iterations=1)
                 explored_map[new_explored_area > 0] = 1

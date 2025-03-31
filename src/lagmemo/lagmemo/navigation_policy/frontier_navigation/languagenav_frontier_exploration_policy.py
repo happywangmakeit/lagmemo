@@ -11,7 +11,8 @@ from sklearn.cluster import DBSCAN
 
 from lagmemo.mapping.semantic.constants import MapConstants as MC
 from lagmemo.utils.morphology import binary_dilation
-
+import cv2
+import frontier_exploration
 
 class LanguageNavFrontierExplorationPolicy(nn.Module):
     """
@@ -131,11 +132,42 @@ class LanguageNavFrontierExplorationPolicy(nn.Module):
                     found_goal_current[e] = True
         return goal_map, found_goal_current
 
+    def get_frontiers(self, map_features):
+        agent_radius = 0.18 # 0.36
+        pixels_per_meter = 20
+        area_thresh = 1.0
+        kernel_size = pixels_per_meter * agent_radius * 2
+        _area_thresh_in_pixels = area_thresh * (pixels_per_meter**2)
+        # round kernel_size to nearest odd number
+        kernel_size = int(kernel_size) + (int(kernel_size) % 2 == 0)
+        _navigable_kernel = np.ones((kernel_size, kernel_size), np.uint8)
+        
+        # mapfeatures的取得维度还得再调
+        obstacle_map = map_features[0, MC.OBSTACLE_MAP, :, :]
+        obstacle_mask = np.rint(np.array(obstacle_map.cpu())) == 1
+        navigable_map = 1 - cv2.dilate(
+            obstacle_mask.astype(np.uint8),
+            _navigable_kernel,
+            iterations=1,
+        ).astype(bool)
+        explored_map = np.array(map_features[0, MC.EXPLORED_MAP, :, :].cpu())
+        explored_area = cv2.dilate(
+            explored_map.astype(np.uint8),
+            np.ones((5, 5), np.uint8),
+            iterations=1,
+        )
+        frontiers = frontier_exploration.frontier_detection.detect_frontier_waypoints(
+            navigable_map.astype(np.uint8),
+            explored_area.astype(np.uint8),
+            _area_thresh_in_pixels,
+        )
+        return frontiers
+    
     def get_frontier_map(self, map_features, wxl_frontier=False):
         # Select unexplored area
         if wxl_frontier:
-            import cv2
-            import frontier_exploration
+            # import cv2
+            # import frontier_exploration
             agent_radius = 0.18 # 0.36
             pixels_per_meter = 20
             area_thresh = 1.0

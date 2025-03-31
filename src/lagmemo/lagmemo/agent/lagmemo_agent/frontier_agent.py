@@ -208,8 +208,6 @@ class FrontierAgent(Agent):
         
         self.prev_position = None
         self.ctr = 0
-        
-        self.hfov = int(config.ENVIRONMENT.hfov)
 
     # ------------------------------------------------------------------
     # Inference methods to interact with vectorized simulation
@@ -287,6 +285,7 @@ class FrontierAgent(Agent):
             seq_global_pose,
             seq_lmb,
             seq_origins,
+            frontiers,
         ) = self.module(
             obs.unsqueeze(1),
             pose_delta.unsqueeze(1),
@@ -322,7 +321,6 @@ class FrontierAgent(Agent):
         self.semantic_map.lmb = seq_lmb[:, -1]
         self.semantic_map.origins = seq_origins[:, -1]
 
-
         goal_map = self.goal_map.squeeze(1).cpu().numpy()
 
         if self.found_goal[0].item():
@@ -356,7 +354,7 @@ class FrontierAgent(Agent):
                 "frontier_map": self.semantic_map.get_frontier_map(e),
                 "sensor_pose": self.semantic_map.get_planner_pose_inputs(e),
                 "found_goal": self.found_goal[e].item(),
-                "goal_pose": self.goal_pose[e] if self.goal_pose is not None else None
+                "goal_pose": self.goal_pose[e] if self.goal_pose is not None else None,
             }
             for e in range(self.num_environments)
         ]
@@ -367,6 +365,7 @@ class FrontierAgent(Agent):
                     "semantic_map": self.semantic_map.get_semantic_map(e),
                     "been_close_map": self.semantic_map.get_been_close_map(e),
                     "timestep": self.total_timesteps[e],
+                    "frontiers": frontiers,
                 }
                 for e in range(self.num_environments)
             ]
@@ -587,45 +586,34 @@ class FrontierAgent(Agent):
 
         if self.visualize:
             vis_inputs[0]["dilated_obstacle_map"] = dilated_obstacle_map
-            if task_type == "imagenav":
-                collision = {"is_collision": False}
-                info = {
-                    **planner_inputs[0],
-                    **vis_inputs[0],
-                    "rgb_frame": obs.rgb,
-                    "semantic_frame": obs.semantic,
-                    "closest_goal_map": closest_goal_map,
-                    "last_goal_image": obs.task_observations["tasks"][
-                        self.current_task_idx
-                    ]["image"],
-                    "last_collisions": collision,
-                    "last_td_map": obs.task_observations.get("top_down_map"),
-                    "short_term_goal": short_term_goal,
-                }
-                if self.imagenav_visualizer is not None:
-                    self.imagenav_visualizer.visualize(**info)
-            else:
-                goal_text_desc = {
-                    x: y
-                    for x, y in obs.task_observations["tasks"][
-                        self.current_task_idx
-                    ].items()
-                    if x != "image"
-                }
-                vis_inputs[0]["goal_name"] = goal_text_desc
-                vis_inputs[0]["semantic_frame"] = obs.task_observations[
-                    "semantic_frame"
-                ]
-                vis_inputs[0]["closest_goal_map"] = closest_goal_map
-                vis_inputs[0]["third_person_image"] = obs.third_person_image
-                vis_inputs[0]["short_term_goal"] = None
-                vis_inputs[0]["instance_memory"] = self.instance_memory
-
-                info = {
-                    **planner_inputs[0],
-                    **vis_inputs[0],
-                    "short_term_goal": short_term_goal,
-                }
+            collision = {"is_collision": False}
+            info = {
+                **planner_inputs[0],
+                **vis_inputs[0],
+                "rgb_frame": obs.rgb,
+                "semantic_frame": obs.semantic,
+                "closest_goal_map": closest_goal_map,
+                "last_collisions": collision,
+                "last_td_map": obs.task_observations.get("top_down_map"),
+                "short_term_goal": short_term_goal,
+            }
+            info['last_goal_image'] = None if task_type != "imagenav" else obs.task_observations["tasks"][
+                    self.current_task_idx
+                ]["image"]
+        
+            goal_text_desc = {
+                x: y
+                for x, y in obs.task_observations["tasks"][
+                    self.current_task_idx
+                ].items()
+                if x != "image"
+            }
+            goal_text_desc['action'] = str(action).split('.')[1]
+            info['goal_text'] = str(goal_text_desc)
+            if self.imagenav_visualizer is not None:
+                self.imagenav_visualizer.visualize(**info)
+                
+            info = None
 
         if action == DiscreteNavigationAction.STOP:
             if len(obs.task_observations["tasks"]) - 1 > self.current_task_idx:

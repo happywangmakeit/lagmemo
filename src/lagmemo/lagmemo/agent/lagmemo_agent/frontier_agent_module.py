@@ -203,6 +203,7 @@ class GoatAgentModule(nn.Module):
         # frontier_map = (map_features[:, [MC.EXPLORED_MAP], :, :] == 0).float()
         # MC.EXPLORED_MAP = 1 there
         frontier_map = self.policy.get_frontier_map(map_features,wxl_frontier=True)
+        frontiers = self.policy.get_frontiers(map_features=map_features)
         
         # 查看frontier map， wxl
         # frontier_array= np.array(frontier_map.cpu()).reshape((480,480))
@@ -277,4 +278,5 @@ class GoatAgentModule(nn.Module):
             seq_global_pose,
             seq_lmb,
             seq_origins,
+            frontiers,
         )
