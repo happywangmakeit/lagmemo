@@ -2,7 +2,7 @@ BASE_TASK_CONFIG_PATH: configs/task/hm3d_challenge2022_val.yaml
 
 NO_GPU: 0                 # 1: ignore IDs above and run on CPU, 0: run on GPUs with IDs above
 NUM_ENVIRONMENTS: 35      # number of environments (per agent process)
-DUMP_LOCATION: datadump   # path to dump models and log
+DUMP_LOCATION: datadump1   # path to dump models and log
 EXP_NAME: stretch_openvocab_   # experiment name
 VISUALIZE: 0              # 1: render observation and predicted semantic map, 0: no visualization
 PRINT_IMAGES: 1           # 1: save visualization as images, 0: no image saving
@@ -12,16 +12,16 @@ SHOW_RL_OBS: False         # whether to show the observations passed to RL polic
 
 ENVIRONMENT:
   turn_angle: 30.0        # agent turn angle (in degrees)
-  frame_height: 640       # first-person frame height (in pixels)
-  frame_width: 360        # first-person frame width (in pixels)
+  frame_height: 480 # 640       # first-person frame height (in pixels)
+  frame_width: 640 # 360        # first-person frame width (in pixels)
   camera_height: 1.31     # camera sensor height (in metres)
-  hfov: 42              # horizontal field of view (in degrees)
+  hfov: 79 #42              # horizontal field of view (in degrees)
   min_depth: 0.5          # minimum depth for depth sensor (in metres)
   max_depth: 5.0          # maximum depth for depth sensor (in metres)
   max_num_sub_task_episodes: 20
 
 AGENT:
-  max_steps: 15          # maximum number of steps before stopping an episode
+  max_steps: 200          # maximum number of steps before stopping an episode
   panorama_start: 1       # 1: turn around 360 degrees when starting an episode, 0: don't
   exploration_strategy: seen_frontier  # exploration strategy ("seen_frontier", "been_close_to_frontier")
   radius: 0.05            # robot radius (in meters)
