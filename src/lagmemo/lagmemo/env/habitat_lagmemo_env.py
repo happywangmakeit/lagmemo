@@ -90,6 +90,15 @@ class HabitatGoatEnv(HabitatEnv):
 
         if not self.ground_truth_semantics:
             self.init_perception_module()
+    def reset_subtask(self):
+        # Need to first update GOATDistanceToSubGoal so that the goal position calculated when SPL resets is updated to the next subtask.
+        # print("reset metrics distance_to_goal, spl, top_down_map")
+        for measure in self.habitat_env._task.measurements.measures.values():
+            if (measure.uuid == 'goat_distance_to_sub-goal'):
+                measure.update_metric(episode=self.habitat_env.current_episode,task=self.habitat_env.task)
+        for measure in self.habitat_env._task.measurements.measures.values():
+            if (measure.uuid == 'goat_top_down_map') or (measure.uuid == 'goat_sub-task_spl'):
+                measure.reset_metric(episode=self.habitat_env.current_episode,task=self.habitat_env.task)
 
     def fetch_vocabulary(self, goals):
         # TODO: get open set vocabulary
@@ -177,6 +186,7 @@ class HabitatGoatEnv(HabitatEnv):
             },
             camera_pose=None,
             third_person_image=None,
+            globalpose=habitat_obs["globalpose"]
         )
         obs = self._preprocess_semantic(obs, habitat_obs["semantic"])
         return obs
