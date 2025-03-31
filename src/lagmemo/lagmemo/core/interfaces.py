@@ -231,3 +231,4 @@ class Observations:
     # --------------------------------------------------------
 
     task_observations: Optional[Dict[str, Any]] = None
+    globalpose: np.ndarray = None  # (w,x,y,z, x,y,z) rotation and position

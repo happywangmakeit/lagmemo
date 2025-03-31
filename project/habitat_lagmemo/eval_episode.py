@@ -30,6 +30,10 @@ from config_utils import get_config
 from habitat.core.env import Env
 
 from lagmemo.agent.lagmemo_agent.lagmemo_agent import GoatAgent
+# TODO
+# from lagmemo.agent.lagmemo_agent.goat_agent import GoatAgent
+# from lagmemo.agent.lagmemo_agent.vlfm_agent import MTVLFMAgent
+# from lagmemo.agent.lagmemo_agent.data_record_agent import DataRecordAgent
 from lagmemo.core.interfaces import DiscreteNavigationAction
 from lagmemo.env.habitat_lagmemo_env import HabitatGoatEnv
 from lagmemo.agent.lagmemo_agent.data_record_agent import DataRecordAgent
@@ -40,7 +44,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--habitat_config_path",
         type=str,
-        default="project/config/habitat/lagmemo_hm3d_stretch.yaml",
+        default="project/config/habitat/lagmemo_hm3d.yaml",
         help="Path to config yaml",
     )
     parser.add_argument(
@@ -83,17 +87,21 @@ if __name__ == "__main__":
     else:
         config.habitat.dataset.content_scenes = [args.scenes]
     # config.habitat.dataset.content_scenes = ["TEEsavR23oF"] # TODO: for debugging. REMOVE later.
-
+    # config.habitat.dataset.content_scenes = ["5cdEh9F2hJL"]
     config.NUM_ENVIRONMENTS = 1
     config.PRINT_IMAGES = 1
 
     config.EXP_NAME = f"{config.EXP_NAME}_{args.scene_idx}"
 
-    # agent = GoatAgent(config=config)
+    # # initilize environment, loading dataset
     # agent = DataRecordAgent(config=config)
     agent = FrontierAgent(config=config)
     habitat_env = Env(config)
     env = HabitatGoatEnv(habitat_env, config=config)
+    # initialize agent, with different strategy
+    agent = GoatAgent(config=config)
+    # agent = MTVLFMAgent(config=config)
+    # agent = DataRecordAgent(config=config)
 
     results_dir = os.path.join(config.DUMP_LOCATION, "results", config.EXP_NAME)
     os.makedirs(results_dir, exist_ok=True)
@@ -160,7 +168,9 @@ if __name__ == "__main__":
 
 
             if action == DiscreteNavigationAction.STOP:
+                # need reset metrics
                 ep_metrics = env.get_episode_metrics()
+                env.reset_subtask()
                 ep_metrics.pop("goat_top_down_map", None)
                 print('-------------------------')
                 print(f"{scene_id}_{episode_id}_{current_task_idx}", ep_metrics)

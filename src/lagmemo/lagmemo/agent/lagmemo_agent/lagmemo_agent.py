@@ -515,10 +515,9 @@ class GoatAgent(Agent):
         dilated_obstacle_map = None
         short_term_goal = None
         could_not_find_path = False
-        if planner_inputs[0]["found_goal"]:
-            self.episode_panorama_start_steps = 0
+        # revise left turn
         if self.total_timesteps[0] < self.episode_panorama_start_steps:
-            action = DiscreteNavigationAction.TURN_RIGHT
+            action = DiscreteNavigationAction.TURN_LEFT
         else:
             (
                 action,
