@@ -840,6 +840,8 @@ class Categorical2DSemanticMapModule(nn.Module):
             # This is around the current agent - we just sort of assume we know where we are
             try:
                 radius = self.explored_radius
+                # zht: Even for the explored positions, it should be related to the agent's radius. For a grid with 0.17m and 0.05m, this value should be set to 4
+                # radius = 40
                 explored_disk = torch.from_numpy(skimage.morphology.disk(radius))
                 current_map[
                     e,
