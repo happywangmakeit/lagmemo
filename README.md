@@ -116,4 +116,6 @@ pip install numpy==1.23.5 # and continue next step
 
 It's not neccessary if you have pytorch3d in your pip list
 
-#### 
+#### When having problem with "import sophus"
+
+change "sophus" to "sophuspy"

@@ -13,3 +13,6 @@
 [submodule "src/lagmemo/lagmemo/agent/imagenav_agent/SuperGluePretrainedNetwork"]
 	path = src/lagmemo/lagmemo/agent/imagenav_agent/SuperGluePretrainedNetwork
 	url = https://github.com/mukulkhanna/SuperGluePretrainedNetwork.git
+[submodule "src/third_party/frontier_exploration"]
+	path = src/third_party/frontier_exploration
+	url = https://github.com/naokiyokoyama/frontier_exploration.git

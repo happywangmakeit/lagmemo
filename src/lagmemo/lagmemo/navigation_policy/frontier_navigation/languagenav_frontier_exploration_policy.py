@@ -136,9 +136,9 @@ class LanguageNavFrontierExplorationPolicy(nn.Module):
         if wxl_frontier:
             import cv2
             import frontier_exploration
-            agent_radius = 0.05
+            agent_radius = 0.18 # 0.36
             pixels_per_meter = 20
-            area_thresh = 3.0
+            area_thresh = 1.0
             kernel_size = pixels_per_meter * agent_radius * 2
             _area_thresh_in_pixels = area_thresh * (pixels_per_meter**2)
             # round kernel_size to nearest odd number
@@ -186,9 +186,9 @@ class LanguageNavFrontierExplorationPolicy(nn.Module):
         )
         return frontier_map
 
-    def explore_otherwise(self, map_features, goal_map, found_goal):
+    def explore_otherwise(self, map_features, goal_map, found_goal, wxl_frontier=True):
         """Explore closest unexplored region otherwise."""
-        frontier_map = self.get_frontier_map(map_features)
+        frontier_map = self.get_frontier_map(map_features, wxl_frontier=wxl_frontier)
         batch_size = map_features.shape[0]
         for e in range(batch_size):
             if not found_goal[e]:
