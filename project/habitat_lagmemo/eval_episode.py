@@ -33,7 +33,6 @@ from lagmemo.agent.lagmemo_agent.lagmemo_agent import GoatAgent
 # TODO
 # from lagmemo.agent.lagmemo_agent.goat_agent import GoatAgent
 # from lagmemo.agent.lagmemo_agent.vlfm_agent import MTVLFMAgent
-# from lagmemo.agent.lagmemo_agent.data_record_agent import DataRecordAgent
 from lagmemo.core.interfaces import DiscreteNavigationAction
 from lagmemo.env.habitat_lagmemo_env import HabitatGoatEnv
 from lagmemo.agent.lagmemo_agent.data_record_agent import DataRecordAgent
@@ -94,13 +93,12 @@ if __name__ == "__main__":
     config.EXP_NAME = f"{config.EXP_NAME}_{args.scene_idx}"
 
     # # initilize environment, loading dataset
-    # agent = DataRecordAgent(config=config)
-    agent = FrontierAgent(config=config)
     habitat_env = Env(config)
     env = HabitatGoatEnv(habitat_env, config=config)
     # initialize agent, with different strategy
-    agent = GoatAgent(config=config)
+    # agent = GoatAgent(config=config)
     # agent = MTVLFMAgent(config=config)
+    agent = FrontierAgent(config=config)
     # agent = DataRecordAgent(config=config)
 
     results_dir = os.path.join(config.DUMP_LOCATION, "results", config.EXP_NAME)

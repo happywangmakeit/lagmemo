@@ -171,7 +171,9 @@ class HabitatGoatEnv(HabitatEnv):
     def _preprocess_obs(
         self, habitat_obs: habitat.core.simulator.Observations
     ) -> lagmemo.core.interfaces.Observations:
-        depth = self._preprocess_depth(habitat_obs["depth"])
+        depth = habitat_obs["depth"][:,:,-1]
+        # not scaling depth
+        # depth = self._preprocess_depth(habitat_obs["depth"])
         goals = self._preprocess_goals(
             self.current_episode.tasks, habitat_obs
         )
