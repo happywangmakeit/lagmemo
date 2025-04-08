@@ -77,10 +77,10 @@ if __name__ == "__main__":
     print("-" * 100)
 
     config = get_config(args.habitat_config_path, args.baseline_config_path)
-    config['habitat']['dataset']['data_path'] = 'data/datasets/goat/hm3d/lagmemo/val_seen.json.gz'
+    config['habitat']['dataset']['data_path'] = 'data/datasets/goat/hm3d/lagmemov2/val_seen.json.gz'
     
     # all_scenes = os.listdir(os.path.dirname(config.habitat.dataset.data_path.format(split=config.habitat.dataset.split)) + "/content/")
-    all_scenes = os.listdir('data/datasets/goat/hm3d/lagmemo/content/')
+    all_scenes = os.listdir('data/datasets/goat/hm3d/lagmemov2/content/')
     all_scenes = sorted([x.split('.')[0] for x in all_scenes])
     if args.scenes == "all":
         config.habitat.dataset.content_scenes = all_scenes
@@ -99,7 +99,7 @@ if __name__ == "__main__":
     habitat_env = Env(config)
     env = HabitatGoatEnv(habitat_env, config=config)
     # initialize agent, with different strategy
-    agent = GoatAgent(config=config)
+    # agent = GoatAgent(config=config)
     # agent = MTVLFMAgent(config=config)
     # agent = DataRecordAgent(config=config)
 
