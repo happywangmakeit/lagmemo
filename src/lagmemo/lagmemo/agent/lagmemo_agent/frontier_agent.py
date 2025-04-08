@@ -597,9 +597,14 @@ class FrontierAgent(Agent):
                 "last_td_map": obs.task_observations.get("top_down_map"),
                 "short_term_goal": short_term_goal,
             }
-            info['last_goal_image'] = None if task_type != "imagenav" else obs.task_observations["tasks"][
-                    self.current_task_idx
-                ]["image"]
+            try:
+                info['last_goal_image'] = obs.task_observations["tasks"][
+                        self.current_task_idx
+                    ]["image"]
+            except:
+                info['last_goal_image'] = None if task_type != "imagenav" else obs.task_observations["tasks"][
+                        self.current_task_idx
+                    ]["image"]
         
             goal_text_desc = {
                 x: y

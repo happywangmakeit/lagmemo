@@ -126,7 +126,10 @@ class FMMPlanner:
         # This is where we actually call the FMM algorithm!!
         # It will compute the distance from each traversible point to the goal.
         if (timestep - 1) % map_update_frequency == 0 or dd is None:
-            dd = skfmm.distance(traversible_ma, dx=1 * map_downsample_factor)
+            try:
+                dd = skfmm.distance(traversible_ma, dx=1 * map_downsample_factor)
+            except:
+                pass
             dd = ma.filled(dd, np.max(dd) + 1)
             if self.debug:
                 print(f"Computing skfmm.distance (timestep: {timestep})")

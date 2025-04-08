@@ -94,6 +94,9 @@ class Visualizer:
         self.text_thickness = 1
         self.show_rl_obs = config.SHOW_RL_OBS
         self.ind_frame_height = 480
+        
+        # wxl, 2025.3.24
+        self._explored_map = np.zeros((480, 480))
 
 
     def reset(self):
@@ -348,6 +351,87 @@ class Visualizer:
             semantic_map[np.logical_and(no_category_mask, explored_mask)] = PI.EXPLORED
             semantic_map[np.logical_and(no_category_mask, obstacle_mask)] = PI.OBSTACLES
             semantic_map[visited_mask] = PI.VISITED
+            
+            # # frontier test, wxl, 2025.3.8
+            # import frontier_exploration 
+            # agent_radius = 0.05
+            # pixels_per_meter = 20
+            # area_thresh = 3.0
+            # kernel_size = pixels_per_meter * agent_radius * 2
+            # _area_thresh_in_pixels = area_thresh * (pixels_per_meter**2)
+            # # round kernel_size to nearest odd number
+            # kernel_size = int(kernel_size) + (int(kernel_size) % 2 == 0)
+            # _navigable_kernel = np.ones((kernel_size, kernel_size), np.uint8)
+            # navigable_map = 1 - cv2.dilate(
+            #     obstacle_mask.astype(np.uint8),
+            #     _navigable_kernel,
+            #     iterations=1,
+            # ).astype(bool)
+            
+            # # wxl, diy explored map, 2025.3.24
+            # from frontier_exploration.utils.fog_of_war import reveal_fog_of_war
+            # from lagmemo.mapping.vlfm_map.geometry_utils import extract_yaw
+            # pos = (
+            #     int((curr_x * 100.0 / self.map_resolution - gx1)
+            #     * 480
+            #     / obstacle_map.shape[0]),
+            #     int((obstacle_map.shape[1] - curr_y * 100.0 / self.map_resolution + gy1)
+            #     * 480
+            #     / obstacle_map.shape[1]),
+            #     np.deg2rad(-curr_o),
+            # )
+            # agent_xy_location = np.array(pos[:2])
+            # agent_pixel_location = agent_xy_location
+            # new_explored_area = reveal_fog_of_war(
+            #     top_down_map=navigable_map.astype(np.uint8),
+            #     current_fog_of_war_mask=np.zeros_like(obstacle_map, dtype=np.uint8),
+            #     current_point=agent_pixel_location[::-1],
+            #     current_angle=pos[2]+np.pi/2,
+            #     fov=90,
+            #     max_line_len=5 * pixels_per_meter,
+            # )
+            # new_explored_area = cv2.dilate(new_explored_area, np.ones((3, 3), np.uint8), iterations=1)
+            # self._explored_map[new_explored_area > 0] = 1
+            # self._explored_map[navigable_map == 0] = 0
+            # contours, _ = cv2.findContours(
+            #     self._explored_map.astype(np.uint8),
+            #     cv2.RETR_EXTERNAL,
+            #     cv2.CHAIN_APPROX_SIMPLE,
+            # )
+            # if len(contours) > 1:
+            #     min_dist = np.inf
+            #     best_idx = 0
+            #     for idx, cnt in enumerate(contours):
+            #         dist = cv2.pointPolygonTest(cnt, tuple([int(i) for i in agent_pixel_location]), True)
+            #         if dist >= 0:
+            #             best_idx = idx
+            #             break
+            #         elif abs(dist) < min_dist:
+            #             min_dist = abs(dist)
+            #             best_idx = idx
+            #     new_area = np.zeros_like(self._explored_map, dtype=np.uint8)
+            #     cv2.drawContours(new_area, contours, best_idx, 1, -1)  # type: ignore
+            #     self._explored_map = new_area.astype(bool)
+            
+            # explored_area = cv2.dilate(
+            #     self._explored_map.astype(np.uint8),
+            #     np.ones((5, 5), np.uint8),
+            #     iterations=1,
+            # )
+            # frontiers = frontier_exploration.frontier_detection.detect_frontier_waypoints(
+            #     navigable_map.astype(np.uint8),
+            #     explored_area.astype(np.uint8),
+            #     _area_thresh_in_pixels,
+            # )
+            # frontier_map = frontier_exploration.frontier_detection.detect_frontiers(navigable_map.astype(np.uint8), explored_area.astype(np.uint8), _area_thresh_in_pixels)
+            # import ipdb; ipdb.set_trace()
+            # from PIL import Image
+            # frontier_img = Image.fromarray(frontier_map.astype(np.uint8))
+            # frontier_img.save("frontier_img.png")
+            # import ipdb; ipdb.set_trace()
+            # frontier_img = Image.fromarray(frontiers.astype(np.uint8))
+            # frontier_img.save("frontier_point.png")
+            # import ipdb; ipdb.set_trace()
 
             # Goal
             if visualize_goal:

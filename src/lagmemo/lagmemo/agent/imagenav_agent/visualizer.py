@@ -294,6 +294,9 @@ class NavVisualizer:
 
         # 添加object/description map, wxl, 2025.2.21
         if td_map_frame is None and goal_frame is not None:
+            obs_frame = self.pad_frame_height(obs_frame, frontier_frame.shape[0])
+            goal_frame = self.pad_frame_height(goal_frame, frontier_frame.shape[0])
+            map_pred_frame = self.pad_frame_height(map_pred_frame, frontier_frame.shape[0])
             frame = np.concatenate(
                 [goal_frame, obs_frame, map_pred_frame, frontier_frame], axis=1
             )
@@ -309,10 +312,16 @@ class NavVisualizer:
                 obs_frame = self.pad_frame_height(obs_frame, frontier_frame.shape[0])
                 upper_frame = np.concatenate([obs_frame, frontier_frame], axis=1)
                 lower_frame = np.concatenate([map_pred_frame, td_map_frame], axis=1)
-                lower_frame = self.pad_frame(
-                    lower_frame,
-                    upper_frame.shape[1],
-                )
+                if lower_frame.shape[1] > upper_frame.shape[1]:
+                    upper_frame = self.pad_frame(
+                        upper_frame,
+                        lower_frame.shape[1]
+                    )
+                else:
+                    lower_frame = self.pad_frame(
+                        lower_frame,
+                        upper_frame.shape[1]
+                    )
                 frame = np.concatenate([upper_frame, lower_frame], axis=0)
         else:
             obs_frame = self.pad_frame_height(obs_frame, frontier_frame.shape[0])

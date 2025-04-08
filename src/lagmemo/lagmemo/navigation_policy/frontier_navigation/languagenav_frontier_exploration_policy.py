@@ -135,7 +135,7 @@ class LanguageNavFrontierExplorationPolicy(nn.Module):
     def get_frontiers(self, map_features):
         agent_radius = 0.18 # 0.36
         pixels_per_meter = 20
-        area_thresh = 1.0
+        area_thresh = 3.0
         kernel_size = pixels_per_meter * agent_radius * 2
         _area_thresh_in_pixels = area_thresh * (pixels_per_meter**2)
         # round kernel_size to nearest odd number
